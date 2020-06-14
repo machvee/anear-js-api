@@ -1,3 +1,5 @@
+"use strict";
+
 module.exports = {
   "AnearParticipantFixture1": {
     data: {

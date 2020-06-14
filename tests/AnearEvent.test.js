@@ -37,9 +37,9 @@ class TestPlayer extends AnearParticipant {
   }
 }
 
-const { AnearEventFixture: chatEvent } = require("./fixtures/AnearEventFixture")
-const { AnearParticipantFixture1: chatParticipant1 } = require("./fixtures/AnearParticipantFixture1")
-const { AnearParticipantFixture2: chatParticipant2 } = require("./fixtures/AnearParticipantFixture2")
+const { AnearEventFixture: chatEvent,
+        AnearParticipantFixture1: chatParticipant1,
+        AnearParticipantFixture2: chatParticipant2 } = require("./fixtures")
 
 const MessagingStub = jest.double
 
