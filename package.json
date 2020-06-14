@@ -1,21 +1,21 @@
 {
   "name": "anear-js-api",
-  "version": "1.0.0",
-  "description": "App Developer API for Anear Apps",
+  "version": "0.1.1",
+  "description": "JSON Developer API for Anear Apps",
   "main": "index.js",
   "scripts": {
     "test": "jest"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/machvee/anear-api.git"
+    "url": "git+https://github.com/machvee/anear-js-api.git"
   },
   "author": "David McVicar",
   "license": "GPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/machvee/anear-api/issues"
+    "url": "https://github.com/machvee/anear-js-api/issues"
   },
-  "homepage": "https://github.com/machvee/anear-api#readme",
+  "homepage": "https://github.com/machvee/anear-js-api#readme",
   "dependencies": {
     "ably": "^1.2.1",
     "async-lock": "^1.2.4",
