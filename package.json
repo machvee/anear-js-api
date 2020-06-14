@@ -1,5 +1,5 @@
 {
-  "name": "anear-api",
+  "name": "anear-js-api",
   "version": "1.0.0",
   "description": "App Developer API for Anear Apps",
   "main": "index.js",
