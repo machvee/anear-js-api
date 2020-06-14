@@ -1,6 +1,6 @@
 "use strict"
-const AnearEvent = require('../models/AnearEvent')
-const AnearParticipant = require('../models/AnearParticipant')
+const AnearEvent = require('../lib/models/AnearEvent')
+const AnearParticipant = require('../lib/models/AnearParticipant')
 const EventEmitter = require('events').EventEmitter
 
 const mockParticipantEnterCallback = jest.fn()
@@ -37,9 +37,9 @@ class TestPlayer extends AnearParticipant {
   }
 }
 
-const { testEvent: chatEvent } = require("./fixtures/AnearEventFixture")
-const { player1: chatParticipant1 } = require("./fixtures/AnearParticipantFixture1")
-const { player2: chatParticipant2 } = require("./fixtures/AnearParticipantFixture2")
+const { AnearEventFixture: chatEvent } = require("./fixtures/AnearEventFixture")
+const { AnearParticipantFixture1: chatParticipant1 } = require("./fixtures/AnearParticipantFixture1")
+const { AnearParticipantFixture2: chatParticipant2 } = require("./fixtures/AnearParticipantFixture2")
 
 const MessagingStub = jest.double
 

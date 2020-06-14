@@ -1,6 +1,6 @@
-const AnearParticipant = require('../models/AnearParticipant')
+const AnearParticipant = require('../lib/models/AnearParticipant')
 
-const { player1 } =  require('./fixtures/AnearParticipantFixture1')
+const { AnearParticipantFixture1: player1 } =  require('./fixtures/AnearParticipantFixture1')
 
 class TestParticipant extends AnearParticipant {
   initAppData() {

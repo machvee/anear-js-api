@@ -4,7 +4,7 @@
   "description": "App Developer API for Anear Apps",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -15,5 +15,17 @@
   "bugs": {
     "url": "https://github.com/machvee/anear-api/issues"
   },
-  "homepage": "https://github.com/machvee/anear-api#readme"
+  "homepage": "https://github.com/machvee/anear-api#readme",
+  "dependencies": {
+    "ably": "^1.2.1",
+    "async-lock": "^1.2.4",
+    "async-redis": "^1.1.7",
+    "node-fetch": "^2.6.0",
+    "node-logger": "0.0.1",
+    "qs": "^6.9.4"
+  },
+  "devDependencies": {
+    "fakeredis": "^2.0.0",
+    "jest": "^26.0.1"
+  }
 }
