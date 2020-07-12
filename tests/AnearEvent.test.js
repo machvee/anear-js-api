@@ -2,6 +2,7 @@
 const AnearEvent = require('../lib/models/AnearEvent')
 const AnearParticipant = require('../lib/models/AnearParticipant')
 const EventEmitter = require('events').EventEmitter
+const MockMessaging = require('../lib/messaging/__mocks__/AnearMessaging')
 
 const mockParticipantEnterCallback = jest.fn()
 const mockParticipantRefreshCallback = jest.fn()
@@ -41,7 +42,7 @@ const { AnearEventFixture: chatEvent,
         AnearParticipantFixture1: chatParticipant1,
         AnearParticipantFixture2: chatParticipant2 } = require("./fixtures")
 
-const MessagingStub = jest.double
+const MessagingStub = new MockMessaging()
 
 afterAll(async () => await TestEvent.close())
 
