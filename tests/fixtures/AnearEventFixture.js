@@ -15,6 +15,7 @@ module.exports = {
           %22qr_c436aedb6137c9a6.png%22%3B+filename%2A%3DUTF-8%27%27qr_c436aedb6137c9a6.png',
       lat: '40.758895',
       lng: '-73.985131',
+      hosted: false,
       altitude: '10',
       state: 'announce',
       flags: [],
@@ -31,7 +32,7 @@ module.exports = {
      },
      user: {
        data: {
-         id: "2d08adc7-b1af-4607-2a86-b45faa03eaa7", // from player1.js data.id
+         id: "2d08adc7-b1af-4607-2a86-b45faa03eaa7", // from AnearParticipantFixture1 relationships user id
          type: 'users'
        }
      },
