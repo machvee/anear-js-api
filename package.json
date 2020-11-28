@@ -1,6 +1,6 @@
 {
   "name": "anear-js-api",
-  "version": "0.1.25",
+  "version": "0.1.26",
   "description": "Javascript Developer API for Anear Apps",
   "main": "lib/index.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "ably": "^1.2.1",
     "async-lock": "^1.2.4",
     "async-redis": "^1.1.7",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "node-logger": "0.0.1",
     "qs": "^6.9.4"
   },
