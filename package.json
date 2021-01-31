@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/machvee/anear-js-api#readme",
   "dependencies": {
-    "ably": "^1.2.1",
+    "ably": "^1.2.4",
     "async-lock": "^1.2.4",
     "async-redis": "^1.1.7",
     "node-fetch": "^2.6.1",

@@ -43,6 +43,10 @@ const { AnearEventFixture: chatEvent,
 
 const MessagingStub = new MockMessaging()
 
+const identity = (p, anearEvent) => (
+  {...p.identity, isHost: p.identity.userId === anearEvent.userId && anearEvent.attributes.hosted }
+)
+
 afterAll(async () => await TestEvent.close())
 
 afterEach(() => {jest.clearAllMocks()})
@@ -70,26 +74,26 @@ test('can add participant, not hosted', async () => {
   const p2 = new TestPlayer(chatParticipant2)
 
   try {
-    await t.participantEnter(p1)
+    await t.participantEnter(p1, identity(p1, t))
   } catch(err) {
     throw new Error(`test failed: ${err}`)
   }
 
   expect(mockParticipantEnterCallback).toHaveBeenCalledTimes(1)
   expect(mockParticipantEnterCallback).toHaveBeenCalledWith(p1)
-  //expect(t.numActiveParticipants()).toBe(1)
-  //expect(t.getEventParticipant(p1).name).toBe('machvee')
+  expect(t.numActiveParticipants()).toBe(1)
+  expect(t.getEventParticipant(p1).name).toBe('machvee')
 
   try {
-    await t.participantEnter(p2)
+    await t.participantEnter(p2, identity(p2, t))
   } catch(err) {
     throw new Error(`test failed: ${err}`)
   }
 
   expect(mockParticipantEnterCallback).toHaveBeenCalledTimes(2)
   expect(mockParticipantEnterCallback).toHaveBeenCalledWith(p2)
-  //expect(t.numActiveParticipants()).toBe(2)
-  //expect(t.getEventParticipant(p2).name).toBe('bbondfl93')
+  expect(t.numActiveParticipants()).toBe(2)
+  expect(t.getEventParticipant(p2).name).toBe('bbondfl93')
 
   try {
     await t.participantClose(p1)
@@ -101,7 +105,7 @@ test('can add participant, not hosted', async () => {
   expect(mockParticipantCloseCallback).toHaveBeenCalledWith(p1)
   expect(mockParticipantCloseCallback).toHaveBeenCalledWith(p2)
   expect(mockParticipantCloseCallback).toHaveBeenCalledTimes(2)
-  //expect(t.numActiveParticipants()).toBe(0)
+  expect(t.numActiveParticipants()).toBe(0)
 })
 
 
@@ -112,26 +116,26 @@ test('can add participant, hosted', async () => {
   const p2 = new TestPlayer(chatParticipant2)
 
   try {
-    await t.participantEnter(p1)
+    await t.participantEnter(p1, identity(p1, t))
   } catch(err) {
     throw new Error(`test failed: ${err}`)
   }
 
   expect(mockParticipantEnterCallback).toHaveBeenCalledTimes(1)
   expect(mockParticipantEnterCallback).toHaveBeenCalledWith(p1)
-  //expect(t.numActiveParticipants()).toBe(0) // event creator when hosted isn't active participant
-  //expect(t.getEventParticipant(p1).name).toBe('machvee')
+  expect(t.numActiveParticipants()).toBe(0) // event creator when hosted isn't active participant
+  expect(t.getEventParticipant(p1).name).toBe('machvee')
 
   try {
-    await t.participantEnter(p2)
+    await t.participantEnter(p2, identity(p2, t))
   } catch(err) {
     throw new Error(`test failed: ${err}`)
   }
 
   expect(mockParticipantEnterCallback).toHaveBeenCalledTimes(2)
   expect(mockParticipantEnterCallback).toHaveBeenCalledWith(p2)
-  //expect(t.numActiveParticipants()).toBe(1)
-  //expect(t.getEventParticipant(p2).name).toBe('bbondfl93')
+  expect(t.numActiveParticipants()).toBe(1)
+  expect(t.getEventParticipant(p2).name).toBe('bbondfl93')
 
   try {
     await t.participantClose(p1)
@@ -143,7 +147,7 @@ test('can add participant, hosted', async () => {
   expect(mockParticipantCloseCallback).toHaveBeenCalledWith(p1)
   expect(mockParticipantCloseCallback).toHaveBeenCalledWith(p2)
   expect(mockParticipantCloseCallback).toHaveBeenCalledTimes(2)
-  //expect(t.numActiveParticipants()).toBe(0)
+  expect(t.numActiveParticipants()).toBe(0)
 })
 
 test('can be retrieved back from storage with participants', async () => {
@@ -152,8 +156,8 @@ test('can be retrieved back from storage with participants', async () => {
   const p2 = new TestPlayer(chatParticipant2)
 
   try {
-    await testEvent.participantEnter(p1)
-    await testEvent.participantEnter(p2)
+    await testEvent.participantEnter(p1, identity(p1, testEvent))
+    await testEvent.participantEnter(p2, identity(p2, testEvent))
 
     if (await testEvent.exists()) {await testEvent.remove()}
     await testEvent.persist()

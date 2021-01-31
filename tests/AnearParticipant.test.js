@@ -38,18 +38,3 @@ test('participant can be repeatedly rehydrated and updated', async () => {
     console.error(error)
   }
 })
-
-test('participant has an identity object containing immuatable attrs', async () => {
-  try {
-    const participant = new TestParticipant(player1)
-    const identity = participant.identity
-
-    expect(identity.id).toBe(participant.id)
-    expect(identity.userId).toBe(participant.userId)
-    expect(identity.avatarUrl).toBe(participant.avatarUrl)
-
-  } catch(error) {
-    console.error(error)
-  }
-})
-
