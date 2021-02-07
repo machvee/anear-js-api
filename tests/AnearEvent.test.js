@@ -57,24 +57,30 @@ test('constructor', () => {
   expect(a.relationships.user.data.type).toBe("users")
 })
 
-test('can be persisted and removed repeatedly in storage', async () => {
+const newTestEvent = (hosted = false) => {
   const t = new TestEvent(chatEvent, MessagingStub)
-  if (await t.exists()) {await t.remove()}
+  t.attributes.hosted = hosted
+  return t
+}
+
+test('can be persisted and removed repeatedly in storage', async () => {
+  const t = newTestEvent()
   await t.persist()
   await t.remove()
-  const again = new TestEvent(chatEvent, MessagingStub)
-  if (await again.exists()) {await again.remove()}
+  const again = newTestEvent()
   await again.persist()
   await again.remove()
 })
 
-test('can add participant, not hosted', async () => {
-  const t = new TestEvent(chatEvent, MessagingStub)
+test('can add participants, not hosted', async () => {
+  let t = newTestEvent(false)
   const p1 = new TestPlayer(chatParticipant1)
   const p2 = new TestPlayer(chatParticipant2)
 
   try {
     await t.participantEnter(p1, identity(p1, t))
+    await t.persist()
+    t = await TestEvent.getFromStorage(t.data.id, MessagingStub)
   } catch(err) {
     throw new Error(`test failed: ${err}`)
   }
@@ -86,6 +92,8 @@ test('can add participant, not hosted', async () => {
 
   try {
     await t.participantEnter(p2, identity(p2, t))
+    await t.update()
+    t = await TestEvent.getFromStorage(t.data.id, MessagingStub)
   } catch(err) {
     throw new Error(`test failed: ${err}`)
   }
@@ -98,6 +106,9 @@ test('can add participant, not hosted', async () => {
   try {
     await t.participantClose(p1)
     await t.participantClose(p2)
+    await t.update()
+    t = await TestEvent.getFromStorage(t.data.id, MessagingStub)
+    await t.remove()
   } catch(err) {
     throw new Error(`test failed: ${err}`)
   }
@@ -110,24 +121,28 @@ test('can add participant, not hosted', async () => {
 
 
 test('can add participant, hosted', async () => {
-  const t = new TestEvent(chatEvent, MessagingStub)
-  t.attributes.hosted = true
+  let t = newTestEvent(true)
+
   const p1 = new TestPlayer(chatParticipant1)
   const p2 = new TestPlayer(chatParticipant2)
 
   try {
     await t.participantEnter(p1, identity(p1, t))
+    await t.persist()
+    t = await TestEvent.getFromStorage(t.data.id, MessagingStub)
   } catch(err) {
     throw new Error(`test failed: ${err}`)
   }
 
   expect(mockParticipantEnterCallback).toHaveBeenCalledTimes(1)
   expect(mockParticipantEnterCallback).toHaveBeenCalledWith(p1)
-  expect(t.numActiveParticipants()).toBe(0) // event creator when hosted isn't active participant
   expect(t.getEventParticipant(p1).name).toBe('machvee')
+  expect(t.numActiveParticipants()).toBe(0) // event creator when hosted isn't active participant
 
   try {
     await t.participantEnter(p2, identity(p2, t))
+    await t.update()
+    t = await TestEvent.getFromStorage(t.data.id, MessagingStub)
   } catch(err) {
     throw new Error(`test failed: ${err}`)
   }
@@ -140,6 +155,9 @@ test('can add participant, hosted', async () => {
   try {
     await t.participantClose(p1)
     await t.participantClose(p2)
+    await t.update()
+    t = await TestEvent.getFromStorage(t.data.id, MessagingStub)
+    await t.remove()
   } catch(err) {
     throw new Error(`test failed: ${err}`)
   }
@@ -150,8 +168,8 @@ test('can add participant, hosted', async () => {
   expect(t.numActiveParticipants()).toBe(0)
 })
 
-test('can be retrieved back from storage with participants', async () => {
-  const testEvent = new TestEvent(chatEvent, MessagingStub)
+test('can be retrieved back from storage with participants, not hosted', async () => {
+  const testEvent = newTestEvent(false)
   const p1 = new TestPlayer(chatParticipant1)
   const p2 = new TestPlayer(chatParticipant2)
 
@@ -159,20 +177,16 @@ test('can be retrieved back from storage with participants', async () => {
     await testEvent.participantEnter(p1, identity(p1, testEvent))
     await testEvent.participantEnter(p2, identity(p2, testEvent))
 
-    if (await testEvent.exists()) {await testEvent.remove()}
     await testEvent.persist()
   } catch(err) {
     throw new Error(`test failed: ${err}`)
   }
 
   const rehydratedTestEvent = await TestEvent.getFromStorage(testEvent.data.id, MessagingStub)
-  const rehydratedPlayer1 = await TestPlayer.getFromStorage(
-    p1.id
-  )
-  const rehydratedPlayer2 = await TestPlayer.getFromStorage(
-    p2.id
-  )
+  const rehydratedPlayer1 = await TestPlayer.getFromStorage(p1.id)
+  const rehydratedPlayer2 = await TestPlayer.getFromStorage(p2.id)
 
+  expect(rehydratedTestEvent.numActiveParticipants()).toBe(2)
   expect(rehydratedTestEvent.id).toBe(testEvent.data.id)
   expect(rehydratedTestEvent.relationships['user'].data.type).toBe("users")
   expect(rehydratedTestEvent.relationships['zone'].data.type).toBe("zones")
@@ -192,10 +206,9 @@ test('can be retrieved back from storage with participants', async () => {
   }
 })
 
-test('can be retrieved back from storage with lock', async () => {
+test('can be retrieved back from storage with lock, not hosted', async () => {
   try {
-    const testEvent = new TestEvent(chatEvent, MessagingStub)
-    if (await testEvent.exists()) {await testEvent.remove()}
+    const testEvent = newTestEvent(false)
     await testEvent.persist()
     const anEvent = await TestEvent.getWithLockFromStorage(
       testEvent.data.id,

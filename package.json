@@ -1,6 +1,6 @@
 {
   "name": "anear-js-api",
-  "version": "0.1.27",
+  "version": "0.1.28",
   "description": "Javascript Developer API for Anear Apps",
   "main": "lib/index.js",
   "scripts": {
