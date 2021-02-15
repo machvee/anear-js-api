@@ -7,6 +7,7 @@ module.exports = {
     "attributes": {
       "created-at": "2019-06-22T08:41:34.257Z",
       "name": "machvee",
+      "user-type": "host",
       "private-channel-name": "anear:a:6i4GPGg7YiE81jxE65vpov:e:51nriTFWJYwiZRVfhaTmOM:private:4aih3BnWiRXLHKupFFkKHO"
     },
     "relationships": {

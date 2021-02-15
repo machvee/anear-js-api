@@ -7,6 +7,7 @@ module.exports = {
     "attributes": {
       "created-at": "2019-06-22T08:41:34.257Z",
       "name": "bbondfl93",
+      "user-type": "participant",
       "private-channel-name": "anear:a:6i4GGPgY7i8E1jxE65vpov:e:15nirTFJWYwiZRVfhaTmOM:private:4aih3BnWiRXLHKupFFkKHO"
     },
     "relationships": {

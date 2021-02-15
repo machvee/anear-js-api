@@ -85,6 +85,7 @@ test('can add participants, not hosted', async () => {
     throw new Error(`test failed: ${err}`)
   }
 
+  expect(p1.userType).toBe("host")
   expect(mockParticipantEnterCallback).toHaveBeenCalledTimes(1)
   expect(mockParticipantEnterCallback).toHaveBeenCalledWith(p1)
   expect(t.numActiveParticipants()).toBe(1)
@@ -102,6 +103,7 @@ test('can add participants, not hosted', async () => {
   expect(mockParticipantEnterCallback).toHaveBeenCalledWith(p2)
   expect(t.numActiveParticipants()).toBe(2)
   expect(t.getEventParticipant(p2).name).toBe('bbondfl93')
+  expect(p2.userType).toBe("participant")
 
   try {
     await t.participantClose(p1)
@@ -138,6 +140,7 @@ test('can add participant, hosted', async () => {
   expect(mockParticipantEnterCallback).toHaveBeenCalledWith(p1)
   expect(t.getEventParticipant(p1).name).toBe('machvee')
   expect(t.numActiveParticipants()).toBe(0) // event creator when hosted isn't active participant
+  expect(p1.userType).toBe("host")
 
   try {
     await t.participantEnter(p2, identity(p2, t))
