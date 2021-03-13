@@ -8,6 +8,8 @@ module.exports = {
       name: "user1",
       avatarUrl: "https://s3.amazonaws.com/path1",
       geoLocation: {},
+      timestamp: 1615649132502,
+      state: "active",
       isHost: false
     },
     "0f6ab786-fcae-4e81-87ac-a3930f496d71": {
@@ -16,6 +18,8 @@ module.exports = {
       name: "user2",
       avatarUrl: "https://s3.amazonaws.com/path2",
       geoLocation: {},
+      timestamp: 1615649132502,
+      state: "active",
       isHost: false
     },
     "af9c7ff6-c8c9-4f4a-ad04-bcf86ef57d15": {
@@ -24,6 +28,8 @@ module.exports = {
       name: "user3",
       avatarUrl: "https://s3.amazonaws.com/path3",
       geoLocation: {},
+      timestamp: 1615649132502,
+      state: "active",
       isHost: false
     },
     "777b11b5-2b3b-4420-93d2-eff65127c925": {
@@ -32,6 +38,8 @@ module.exports = {
       name: "user4",
       avatarUrl: "https://s3.amazonaws.com/path4",
       geoLocation: {},
+      timestamp: 1615649132502,
+      state: "active",
       isHost: false
     },
     "6405094a-0ac4-4476-9fd8-5d2edc6cf5a1": {
@@ -40,6 +48,8 @@ module.exports = {
       name: "user5",
       avatarUrl: "https://s3.amazonaws.com/path5",
       geoLocation: {},
+      timestamp: 1615649132502,
+      state: "active",
       isHost: false
     },
     "dcaabc23-b7dc-47cd-ad11-43022750dc0e": {
@@ -48,6 +58,8 @@ module.exports = {
       name: "user6",
       avatarUrl: "https://s3.amazonaws.com/path6",
       geoLocation: {},
+      timestamp: 1615649132502,
+      state: "active",
       isHost: false
     },
     "78127e6c-c1b8-490d-ace6-afc798fdf4f6": {
@@ -56,6 +68,8 @@ module.exports = {
       name: "user7",
       avatarUrl: "https://s3.amazonaws.com/path7",
       geoLocation: {},
+      timestamp: 1615649132502,
+      state: "active",
       isHost: false
     },
     "7166a301-aad9-4bc9-b9f7-66f56bfb16d7": {
@@ -64,6 +78,8 @@ module.exports = {
       name: "user8",
       avatarUrl: "https://s3.amazonaws.com/path8",
       geoLocation: {},
+      timestamp: 1615649132502,
+      state: "active",
       isHost: false
     },
     "1e168941-4050-4731-8c27-f2464c717c4a": {
@@ -72,6 +88,8 @@ module.exports = {
       name: "user9",
       avatarUrl: "https://s3.amazonaws.com/path9",
       geoLocation: {},
+      timestamp: 1615642032502,
+      state: "idle",
       isHost: false
     },
     "f1056e6c-c393-4617-8a06-67ba9d2f4b8a": {
@@ -80,6 +98,8 @@ module.exports = {
       name: "user10",
       avatarUrl: "https://s3.amazonaws.com/path10",
       geoLocation: {},
+      timestamp: 1615642032502,
+      state: "idle",
       isHost: false
     },
     "aa396e6c-2193-cd17-eea6-0413eefff893": {
@@ -88,6 +108,8 @@ module.exports = {
       name: "the_host",
       avatarUrl: "https://s3.amazonaws.com/hostpath11",
       geoLocation: {},
+      timestamp: 1615649132502,
+      state: "active",
       isHost: true
     }
   },
