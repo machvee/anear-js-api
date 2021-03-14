@@ -32,7 +32,7 @@ const newCurrentParticipants = timestamp => {
       if (p.state === 'active') {
         p.timestamp = timestamp - (i*2000)
       } else {
-        //. idle since last 30 minutes yesterday
+        // idle in the last 30 minutes
         p.timestamp = timestamp - (30 * 60 * 1000)
       }
     }
@@ -67,9 +67,11 @@ test('getParticipant fail', () =>  {
   expect(p.getParticipant({id: "abcd"})).toBeUndefined()
 })
 
-test('getHost', () =>  {
+test('host', () =>  {
   const p = newActiveParticipants(now)
-  expect(p.getHost().name).toBe("the_host")
+  const host = p.host
+  expect(host.name).toBe("the_host")
+  expect(host.isHost).toBeTruthy
 })
 
 test('getParticipant success', () =>  {
@@ -88,14 +90,14 @@ test('addParticipant()', async () => {
   await AnearParticipant.close()
 })
 
-test('activeContestants', () => {
+test('activeParticipants', () => {
   const p = newActiveParticipants(now)
-  expect(p.activeContestants.length).toBe(10)
+  expect(p.activeParticipants.length).toBe(10)
 })
 
-test('idleContestants', () => {
+test('idleParticipants', () => {
   const p = newCurrentParticipants(now)
-  expect(p.idleContestants.length).toBe(2)
+  expect(p.idleParticipants.length).toBe(2)
 })
 
 test('toJSON', () => {
@@ -106,53 +108,55 @@ test('toJSON', () => {
   expect(j).toHaveProperty("purgeMsecs")
 })
 
-test('isIdleContestant', () => {
+test('isIdleParticipant', () => {
   const p = newCurrentParticipants(now)
   const c = p.getParticipantById(idleId)
-  expect(p.isIdleContestant(c, now)).toBeTruthy()
+  expect(p.isIdleParticipant(c, now)).toBeTruthy()
 })
 
-test('isActiveContestant', () => {
+test('isActiveParticipant', () => {
   const p = newCurrentParticipants(now)
   const c = p.getParticipantById(activeId)
-  expect(p.isActiveContestant(c, now)).toBeTruthy()
+  expect(p.isActiveParticipant(c, now)).toBeTruthy()
 })
 
-test('isPurgeContestant', () => {
+test('isPurgeParticipant', () => {
   const p = newCurrentParticipants(now)
   const c = p.getParticipantById(idleId)
   c.timestamp = c.timestamp - hours24
-  expect(p.isPurgeContestant(c, now)).toBeTruthy()
+  expect(p.isPurgeParticipant(c, now)).toBeTruthy()
 })
 
 test('updateState will leave state unchanged when timeout criteria not met', () => {
   const p = newCurrentParticipants(now)
   p.updateState(now)
-  expect(p.activeContestants.length).toBe(8)
-  expect(p.idleContestants.length).toBe(2)
+  expect(p.activeParticipants.length).toBe(8)
+  expect(p.idleParticipants.length).toBe(2)
+  expect(p.numActiveParticipants()).toBe(8)
+  expect(p.numIdleParticipants()).toBe(2)
 })
 
 test('updateState will leave state unchanged when timeout criteria not met', () => {
   const p = newCurrentParticipants(now)
   p.updateState(now)
-  expect(p.activeContestants.length).toBe(8)
-  expect(p.idleContestants.length).toBe(2)
+  expect(p.activeParticipants.length).toBe(8)
+  expect(p.idleParticipants.length).toBe(2)
 })
 
 test('updateState will mark active to idle when timeout reached', () => {
   const current = now
   const p = newCurrentParticipants(current)
-  expect(p.activeContestants.length).toBe(8)
+  expect(p.activeParticipants.length).toBe(8)
   p.updateState(current + p.idleMsecs + 1000)
   expect(Object.values(p.participants).
     filter(p => p.state === 'active').
     filter(p => !p.isHost).length).toBe(0)
 })
 
-test('updateState will purge idle contestants', () => {
+test('updateState will purge idle participants', () => {
   const current = now
   const p = newCurrentParticipants(current)
-  const idlers = p.idleContestants
+  const idlers = p.idleParticipants
   expect(idlers.length).toBe(2)
   p.updateState(current + p.purgeMsecs + 1000)
   idlers.forEach(c => expect(p.getParticipantById(c.id)).toBeUndefined())

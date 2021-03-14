@@ -1,6 +1,16 @@
 "use strict";
 
 module.exports = {
+  host: {
+    id: "aa396e6c-2193-cd17-eea6-0413eefff893",
+    userId: "044f4dfc-c4d0-4c58-a2fa-9e1e43913dab",
+    name: "the_host",
+    avatarUrl: "https://s3.amazonaws.com/hostpath11",
+    geoLocation: {},
+    timestamp: 1615649132502,
+    state: "active",
+    isHost: true
+  },
   participants: {
     "e053977c-dcb6-40e0-b7b8-e3dbd70ec8fd": {
       id: "e053977c-dcb6-40e0-b7b8-e3dbd70ec8fd",
@@ -102,16 +112,6 @@ module.exports = {
       state: "idle",
       isHost: false
     },
-    "aa396e6c-2193-cd17-eea6-0413eefff893": {
-      id: "aa396e6c-2193-cd17-eea6-0413eefff893",
-      userId: "044f4dfc-c4d0-4c58-a2fa-9e1e43913dab",
-      name: "the_host",
-      avatarUrl: "https://s3.amazonaws.com/hostpath11",
-      geoLocation: {},
-      timestamp: 1615649132502,
-      state: "active",
-      isHost: true
-    }
   },
   idleMsecs: 1800000,
   purgeMsecs: 7200000
