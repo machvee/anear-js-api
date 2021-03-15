@@ -2,12 +2,12 @@
 
 module.exports = {
   data: {
-    "id": "96e33b66-a8c1-4548-9c55-1da3a6c8bae6",
+    "id": "83e33b66-a8c1-4548-9c55-1da3a6c8bae6",
     "type": "participants",
     "attributes": {
       "created-at": "2019-06-22T08:41:34.257Z",
-      "name": "machvee",
-      "user-type": "participant",
+      "name": "foxhole_host",
+      "user-type": "host",
       "private-channel-name": "anear:a:6i4GPGg7YiE81jxE65vpov:e:51nriTFWJYwiZRVfhaTmOM:private:4aih3BnWiRXLHKupFFkKHO"
     },
     "relationships": {
@@ -19,7 +19,7 @@ module.exports = {
       },
       "user": {
         "data": {
-          "id": "2d08adc7-b1af-4607-2a86-b45faa03eaa7",
+          "id": "ada8adc7-b1af-4607-2a86-b45faa03eaa7",
         "type": "users"
         }
       }
@@ -27,7 +27,7 @@ module.exports = {
   },
   included: [
     {
-      "id": "2d08adc7-b1af-4607-2a86-b45faa03eaa7",
+      "id": "ada8adc7-b1af-4607-2a86-b45faa03eaa7",
       "type": "users",
       "attributes": {
         "name": "dave_mcvicar",
@@ -42,7 +42,7 @@ module.exports = {
         }
       },
       "links": {
-        "self": "/v1/users/d280da7c-1baf-4607-a286-4b5faa03eaa7"
+        "self": "/v1/users/ada8adc7-b1af-4607-2a86-b45faa03eaa7"
       }
     },
     {
