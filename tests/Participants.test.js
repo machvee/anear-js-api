@@ -10,6 +10,7 @@ const user1Id = "e053977c-dcb6-40e0-b7b8-e3dbd70ec8fd"
 const idleId = "f1056e6c-c393-4617-8a06-67ba9d2f4b8a"
 const activeId = user1Id
 const hours24 = (24 * 60 * 60 * 1000)
+const GeoLocation = {lat: 25.8348343, lng: -80.38438434}
 
 const newActiveParticipants = timestamp => {
   const copy = JSON.parse(JSON.stringify(participantsJSON))
@@ -97,10 +98,13 @@ test('getParticipant success', () =>  {
 test('addParticipant() participant user', async () => {
   const p = newCurrentParticipants(now)
   const participant = new AnearParticipant(visitor2JSON)
-  const presenceMessage = {...participant.identity, isHost: false}
+  participant.geoLocation = GeoLocation
 
-  p.addParticipant(presenceMessage)
-  expect(p.getParticipant(participant).name).toBe("bbondfl93")
+  p.addParticipant(participant)
+  const part = p.getParticipant(participant)
+  expect(part.name).toBe("bbondfl93")
+  expect(part.avatarUrl).toBe("https://s3.amazonaws.com/anearassets/barbara_bond.png")
+  expect(part.userId).toBe("d280da7c-1baf-4607-a286-4b5faa03eaa7")
 
   await AnearParticipant.close()
 })
@@ -108,11 +112,12 @@ test('addParticipant() participant user', async () => {
 test('addParticipant() host user', async () => {
   const p = newCurrentParticipants(now)
   const host = new AnearParticipant(hostJSON)
-  const presenceMessage = {...host.identity, isHost: true}
+  host.geoLocation = GeoLocation
 
-  p.addParticipant(presenceMessage)
+  p.addParticipant(host)
   expect(p.getParticipant(host)).toBeUndefined()
   expect(p.host.name).toBe('foxhole_host')
+  expect(p.host.avatarUrl).toBe("https://s3.amazonaws.com/anearassets/foxhole.png")
 
   await AnearParticipant.close()
 })
