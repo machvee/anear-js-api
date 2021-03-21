@@ -58,32 +58,32 @@ test('constructor with JSON provided', () => {
   expect(p).toBeDefined()
   expect(p.idleMsecs).toBe(1800000)
   expect(p.purgeMsecs).toBe(7200000)
-  expect(p.participants).toHaveLength(0)
+  expect(p.all).toHaveLength(0)
 })
 
-test('getParticipantById', () =>  {
+test('getById', () =>  {
   const p = newActiveParticipants(now)
-  expect(p.getParticipantById(user1Id)).toHaveProperty("name", "user1")
+  expect(p.getById(user1Id)).toHaveProperty("name", "user1")
 })
 
-test('hasParticipant success', () =>  {
+test('exists success', () =>  {
   const p = newActiveParticipants(now)
-  expect(p.hasParticipant({id: user1Id})).toBeTruthy()
+  expect(p.exists({id: user1Id})).toBeTruthy()
 })
 
-test('hasParticipant fail', () =>  {
+test('exists fail', () =>  {
   const p = newActiveParticipants(now)
-  expect(p.hasParticipant({id: "abcd"})).toBeFalsy()
+  expect(p.exists({id: "abcd"})).toBeFalsy()
 })
 
-test('getParticipant success', () =>  {
+test('get success', () =>  {
   const p = newActiveParticipants(now)
-  expect(p.getParticipant({id: user1Id})).toHaveProperty("name", "user1")
+  expect(p.get({id: user1Id})).toHaveProperty("name", "user1")
 })
 
 test('getParticipant fail', () =>  {
   const p = newActiveParticipants(now)
-  expect(p.getParticipant({id: "abcd"})).toBeUndefined()
+  expect(p.get({id: "abcd"})).toBeUndefined()
 })
 
 test('host', () =>  {
@@ -94,16 +94,16 @@ test('host', () =>  {
 
 test('getParticipant success', () =>  {
   const p = newActiveParticipants(now)
-  expect(p.getParticipant({id: user1Id}).name).toBe("user1")
+  expect(p.get({id: user1Id}).name).toBe("user1")
 })
 
-test('addParticipant() participant user', async () => {
+test('add() participant user', async () => {
   const p = newCurrentParticipants(now)
   const participant = new AnearParticipant(visitor2JSON)
   participant.geoLocation = GeoLocation
 
-  p.addParticipant(MockNonHostedEvent, participant)
-  const part = p.getParticipant(participant)
+  p.add(MockNonHostedEvent, participant)
+  const part = p.get(participant)
   expect(part.name).toBe("bbondfl93")
   expect(part.avatarUrl).toBe("https://s3.amazonaws.com/anearassets/barbara_bond.png")
   expect(part.userId).toBe("d280da7c-1baf-4607-a286-4b5faa03eaa7")
@@ -111,27 +111,27 @@ test('addParticipant() participant user', async () => {
   await AnearParticipant.close()
 })
 
-test('addParticipant() host user', async () => {
+test('add() host user', async () => {
   const p = newCurrentParticipants(now)
   const host = new AnearParticipant(hostJSON)
   host.geoLocation = GeoLocation
 
-  p.addParticipant(MockHostedEvent, host)
-  expect(p.getParticipant(host)).toBeUndefined()
+  p.add(MockHostedEvent, host)
+  expect(p.get(host)).toBeUndefined()
   expect(p.host.name).toBe('foxhole_host')
   expect(p.host.avatarUrl).toBe("https://s3.amazonaws.com/anearassets/foxhole.png")
 
   await AnearParticipant.close()
 })
 
-test('activeParticipants', () => {
+test('active', () => {
   const p = newActiveParticipants(now)
-  expect(p.activeParticipants()).toHaveLength(10)
+  expect(p.active()).toHaveLength(10)
 })
 
-test('idleParticipants', () => {
+test('idle', () => {
   const p = newCurrentParticipants(now)
-  expect(p.idleParticipants()).toHaveLength(2)
+  expect(p.idle()).toHaveLength(2)
 })
 
 test('toJSON', () => {
@@ -142,62 +142,62 @@ test('toJSON', () => {
   expect(j).toHaveProperty("purgeMsecs")
 })
 
-test('isIdleParticipant', () => {
+test('isIdle', () => {
   const p = newCurrentParticipants(now)
-  const c = p.getParticipantById(idleId)
-  expect(p.isIdleParticipant(c, now)).toBeTruthy()
+  const c = p.getById(idleId)
+  expect(p.isIdle(c, now)).toBeTruthy()
 })
 
-test('isActiveParticipant', () => {
+test('isActive', () => {
   const p = newCurrentParticipants(now)
-  const c = p.getParticipantById(activeId)
-  expect(p.isActiveParticipant(c, now)).toBeTruthy()
+  const c = p.getById(activeId)
+  expect(p.isActive(c, now)).toBeTruthy()
 })
 
-test('isPurgeParticipant', () => {
+test('isPurge', () => {
   const p = newCurrentParticipants(now)
-  const c = p.getParticipantById(idleId)
+  const c = p.getById(idleId)
   c.timestamp = c.timestamp - hours24
-  expect(p.isPurgeParticipant(c, now)).toBeTruthy()
+  expect(p.isPurge(c, now)).toBeTruthy()
 })
 
 test('purgeParticipant participant user-type', () => {
   const p = newCurrentParticipants(now)
-  const c = p.getParticipantById(idleId)
-  p.purgeParticipant(c)
-  expect(p.hasParticipant(c)).toBeFalsy()
+  const c = p.getById(idleId)
+  p.purge(c)
+  expect(p.exists(c)).toBeFalsy()
 })
 
-test('purgeParticipant host user-type', () => {
+test('purge host user-type', () => {
   const p = newActiveParticipants(now)
   const c = p.host
-  p.purgeParticipant(c)
+  p.purge(c)
   expect(p.host).toStrictEqual({})
 })
 
 test('updateState will leave state unchanged when timeout criteria not met', () => {
   const p = newCurrentParticipants(now)
   p.updateState(now)
-  expect(p.activeParticipants()).toHaveLength(8)
-  expect(p.idleParticipants()).toHaveLength(2)
-  expect(p.numActiveParticipants()).toBe(8)
-  expect(p.numIdleParticipants()).toBe(2)
+  expect(p.active()).toHaveLength(8)
+  expect(p.idle()).toHaveLength(2)
+  expect(p.numActive()).toBe(8)
+  expect(p.numIdle()).toBe(2)
 })
 
 test('updateState will mark active to idle when timeout reached', () => {
   const current = now
   const p = newCurrentParticipants(current)
-  expect(p.activeParticipants()).toHaveLength(8)
+  expect(p.active()).toHaveLength(8)
   p.updateState(current + p.idleMsecs + 1000)
-  expect(Object.values(p.participants).
+  expect(Object.values(p.all).
     filter(p => p.state === 'active')).toHaveLength(0)
 })
 
 test('updateState will purge idle participants', () => {
   const current = now
   const p = newCurrentParticipants(current)
-  const idlers = p.idleParticipants()
+  const idlers = p.idle()
   expect(idlers).toHaveLength(2)
   p.updateState(current + p.purgeMsecs + 1000)
-  idlers.forEach(c => expect(p.getParticipantById(c.id)).toBeUndefined())
+  idlers.forEach(c => expect(p.getById(c.id)).toBeUndefined())
 })

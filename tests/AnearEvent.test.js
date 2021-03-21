@@ -85,7 +85,7 @@ test('can add participants, not hosted', async () => {
   expect(p1.userType).toBe("participant")
   expect(mockParticipantEnterCallback).toHaveBeenCalledTimes(1)
   expect(mockParticipantEnterCallback).toHaveBeenCalledWith(p1)
-  expect(t.participants.numActiveParticipants(false)).toBe(1)
+  expect(t.participants.numActive(false)).toBe(1)
   expect(t.participants.host).toStrictEqual({})
 
   try {
@@ -98,8 +98,8 @@ test('can add participants, not hosted', async () => {
 
   expect(mockParticipantEnterCallback).toHaveBeenCalledTimes(2)
   expect(mockParticipantEnterCallback).toHaveBeenCalledWith(p2)
-  expect(t.participants.numActiveParticipants(false)).toBe(2)
-  expect(t.participants.getParticipant(p2).name).toBe("bbondfl93")
+  expect(t.participants.numActive(false)).toBe(2)
+  expect(t.participants.get(p2).name).toBe("bbondfl93")
   expect(p2.userType).toBe("participant")
 
   try {
@@ -117,7 +117,7 @@ test('can add participants, not hosted', async () => {
   expect(mockParticipantCloseCallback).toHaveBeenCalledWith(p1)
   expect(mockParticipantCloseCallback).toHaveBeenCalledWith(p2)
   expect(mockParticipantCloseCallback).toHaveBeenCalledTimes(2)
-  expect(t.participants.numActiveParticipants(false)).toBe(0)
+  expect(t.participants.numActive(false)).toBe(0)
 })
 
 
@@ -125,7 +125,7 @@ test('can add participant, hosted', async () => {
   let t = newTestEvent(true)
 
   expect(t.hosted).toBe(true)
-  expect(t.participants.numActiveParticipants(false)).toBe(0)
+  expect(t.participants.numActive(false)).toBe(0)
 
   const host = new TestPlayer(chatHost)
   const p2 = new TestPlayer(chatParticipant2)
@@ -143,7 +143,7 @@ test('can add participant, hosted', async () => {
   expect(mockParticipantEnterCallback).toHaveBeenCalledTimes(1)
   expect(mockParticipantEnterCallback).toHaveBeenCalledWith(host)
   expect(t.participants.host.name).toBe('foxhole_host')
-  expect(t.participants.numActiveParticipants(false)).toBe(0) // event creator when hosted isn't active participant
+  expect(t.participants.numActive(false)).toBe(0) // event creator when hosted isn't active participant
 
   try {
     await t.participantEnter(p2)
@@ -155,8 +155,8 @@ test('can add participant, hosted', async () => {
 
   expect(mockParticipantEnterCallback).toHaveBeenCalledTimes(2)
   expect(mockParticipantEnterCallback).toHaveBeenCalledWith(p2)
-  expect(t.participants.numActiveParticipants(false)).toBe(1)
-  expect(t.participants.getParticipant(p2).name).toBe('bbondfl93')
+  expect(t.participants.numActive(false)).toBe(1)
+  expect(t.participants.get(p2).name).toBe('bbondfl93')
 
   try {
     await t.participantClose(host)
@@ -171,7 +171,7 @@ test('can add participant, hosted', async () => {
   expect(mockParticipantCloseCallback).toHaveBeenCalledWith(host)
   expect(mockParticipantCloseCallback).toHaveBeenCalledWith(p2)
   expect(mockParticipantCloseCallback).toHaveBeenCalledTimes(2)
-  expect(t.participants.numActiveParticipants(false)).toBe(0)
+  expect(t.participants.numActive(false)).toBe(0)
 })
 
 test('can be retrieved back from storage with participants, not hosted', async () => {
@@ -192,7 +192,7 @@ test('can be retrieved back from storage with participants, not hosted', async (
   const rehydratedPlayer1 = await TestPlayer.getFromStorage(p1.id)
   const rehydratedPlayer2 = await TestPlayer.getFromStorage(p2.id)
 
-  expect(rehydratedTestEvent.participants.numActiveParticipants(false)).toBe(2)
+  expect(rehydratedTestEvent.participants.numActive(false)).toBe(2)
   expect(rehydratedTestEvent.id).toBe(testEvent.data.id)
   expect(rehydratedTestEvent.relationships['user'].data.type).toBe("users")
   expect(rehydratedTestEvent.relationships['zone'].data.type).toBe("zones")
