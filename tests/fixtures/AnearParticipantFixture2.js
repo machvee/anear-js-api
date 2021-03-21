@@ -51,9 +51,9 @@ module.exports = {
       "attributes": {
         "first-name": "Barbara",
         "last-name": "Bond",
-        "bio": "Repellendus ut neque. Est autem cupiditate. In omnis dolore.",
+        "bio": "Contradictus ut neque. Est autem cupiditate. In omnis dolore.",
         "homepage": "http://hodkiewicz.name/frankie",
-        "avatar-url": "https://s3.amazonaws.com/anearassets/anon_user.png"
+        "avatar-url": "https://s3.amazonaws.com/anearassets/barbara_bond.png"
       },
       "links": {
         "self": "/v1/profiles/a04976a9-1c08-4bc6-b381-7f0d0637b919"

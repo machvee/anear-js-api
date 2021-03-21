@@ -42,7 +42,7 @@ module.exports = {
         }
       },
       "links": {
-        "self": "/v1/users/d280da7c-1baf-4607-a286-4b5faa03eaa7"
+        "self": "/v1/users/2d08adc7-b1af-4607-2a86-b45faa03eaa7"
       }
     },
     {

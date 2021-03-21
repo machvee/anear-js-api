@@ -12,6 +12,9 @@ const activeId = user1Id
 const hours24 = (24 * 60 * 60 * 1000)
 const GeoLocation = {lat: 25.8348343, lng: -80.38438434}
 
+const MockHostedEvent = {hosted: true}
+const MockNonHostedEvent = {hosted: false}
+
 const newActiveParticipants = timestamp => {
   const copy = JSON.parse(JSON.stringify(participantsJSON))
   const keys = Object.keys(copy.participants)
@@ -87,7 +90,6 @@ test('host', () =>  {
   const p = newActiveParticipants(now)
   const host = p.host
   expect(host.name).toBe("the_host")
-  expect(host.isHost).toBeTruthy
 })
 
 test('getParticipant success', () =>  {
@@ -100,7 +102,7 @@ test('addParticipant() participant user', async () => {
   const participant = new AnearParticipant(visitor2JSON)
   participant.geoLocation = GeoLocation
 
-  p.addParticipant(participant)
+  p.addParticipant(MockNonHostedEvent, participant)
   const part = p.getParticipant(participant)
   expect(part.name).toBe("bbondfl93")
   expect(part.avatarUrl).toBe("https://s3.amazonaws.com/anearassets/barbara_bond.png")
@@ -114,7 +116,7 @@ test('addParticipant() host user', async () => {
   const host = new AnearParticipant(hostJSON)
   host.geoLocation = GeoLocation
 
-  p.addParticipant(host)
+  p.addParticipant(MockHostedEvent, host)
   expect(p.getParticipant(host)).toBeUndefined()
   expect(p.host.name).toBe('foxhole_host')
   expect(p.host.avatarUrl).toBe("https://s3.amazonaws.com/anearassets/foxhole.png")
@@ -124,12 +126,12 @@ test('addParticipant() host user', async () => {
 
 test('activeParticipants', () => {
   const p = newActiveParticipants(now)
-  expect(p.activeParticipants).toHaveLength(10)
+  expect(p.activeParticipants()).toHaveLength(10)
 })
 
 test('idleParticipants', () => {
   const p = newCurrentParticipants(now)
-  expect(p.idleParticipants).toHaveLength(2)
+  expect(p.idleParticipants()).toHaveLength(2)
 })
 
 test('toJSON', () => {
@@ -176,8 +178,8 @@ test('purgeParticipant host user-type', () => {
 test('updateState will leave state unchanged when timeout criteria not met', () => {
   const p = newCurrentParticipants(now)
   p.updateState(now)
-  expect(p.activeParticipants).toHaveLength(8)
-  expect(p.idleParticipants).toHaveLength(2)
+  expect(p.activeParticipants()).toHaveLength(8)
+  expect(p.idleParticipants()).toHaveLength(2)
   expect(p.numActiveParticipants()).toBe(8)
   expect(p.numIdleParticipants()).toBe(2)
 })
@@ -185,17 +187,16 @@ test('updateState will leave state unchanged when timeout criteria not met', () 
 test('updateState will mark active to idle when timeout reached', () => {
   const current = now
   const p = newCurrentParticipants(current)
-  expect(p.activeParticipants).toHaveLength(8)
+  expect(p.activeParticipants()).toHaveLength(8)
   p.updateState(current + p.idleMsecs + 1000)
   expect(Object.values(p.participants).
-    filter(p => p.state === 'active').
-    filter(p => !p.isHost)).toHaveLength(0)
+    filter(p => p.state === 'active')).toHaveLength(0)
 })
 
 test('updateState will purge idle participants', () => {
   const current = now
   const p = newCurrentParticipants(current)
-  const idlers = p.idleParticipants
+  const idlers = p.idleParticipants()
   expect(idlers).toHaveLength(2)
   p.updateState(current + p.purgeMsecs + 1000)
   idlers.forEach(c => expect(p.getParticipantById(c.id)).toBeUndefined())

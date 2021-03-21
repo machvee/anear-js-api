@@ -53,7 +53,7 @@ module.exports = {
         "last-name": "McVicar",
         "bio": "Repellendus ut neque. Est autem cupiditate. In omnis dolore.",
         "homepage": "http://hodkiewicz.name/frankie",
-        "avatar-url": "https://s3.amazonaws.com/anearassets/anon_user.png"
+        "avatar-url": "https://s3.amazonaws.com/anearassets/foxhole.png"
       },
       "links": {
         "self": "/v1/profiles/b04976a9-1c08-4bc6-b381-7f0d0637b979"
