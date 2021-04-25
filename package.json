@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/machvee/anear-js-api#readme",
   "dependencies": {
-    "@ably/msgpack-js": "^0.3.4",
     "ably": "^1.2.9",
     "async-lock": "^1.2.8",
     "async-redis": "^1.1.7",
