@@ -15,8 +15,8 @@ const GeoLocation = {lat: 25.8348343, lng: -80.38438434}
 const MockHostedEvent = {hosted: true}
 const MockNonHostedEvent = {hosted: false}
 
-const newActiveParticipants = timestamp => {
-  const copy = JSON.parse(JSON.stringify(participantsJSON))
+const newActiveParticipants = (timestamp, json = participantsJSON) => {
+  const copy = JSON.parse(JSON.stringify(json))
   const keys = Object.keys(copy.participants)
   keys.forEach(
     (k,i) => {
@@ -28,8 +28,8 @@ const newActiveParticipants = timestamp => {
   return new Participants(copy)
 }
 
-const newCurrentParticipants = timestamp => {
-  const copy = JSON.parse(JSON.stringify(participantsJSON))
+const newCurrentParticipants = (timestamp, json = participantsJSON) => {
+  const copy = JSON.parse(JSON.stringify(json))
   const keys = Object.keys(copy.participants)
   keys.forEach(
     (k,i) => {
@@ -53,12 +53,25 @@ test('constructor with JSON provided', () =>  {
   expect(p.idleMsecs).toBe(participantsJSON.idleMsecs)
 })
 
-test('constructor with JSON provided', () => {
+test('constructor with NO JSON provided', () => {
   const p = new Participants()
   expect(p).toBeDefined()
   expect(p.idleMsecs).toBe(1800000)
   expect(p.purgeMsecs).toBe(7200000)
   expect(p.all).toHaveLength(0)
+})
+
+test('constructor with null idle and purge msecs', () => {
+  const p = newActiveParticipants(now, {...participantsJSON, idleMsecs: null, purgeMsecs: null})
+  expect(p.idleMsecs).toBe(null)
+  expect(p.purgeMsecs).toBe(null)
+  expect(p.idle()).toHaveLength(0)
+  expect(p.active()).toHaveLength(10)
+
+  const c = p.getById(idleId)
+  expect(p.isIdle(c, now)).toBeFalsy()
+  c.timestamp = c.timestamp - hours24
+  expect(p.isPurge(c, now)).toBeFalsy()
 })
 
 test('getById', () =>  {
