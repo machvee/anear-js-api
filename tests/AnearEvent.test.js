@@ -6,6 +6,7 @@ const MockMessaging = require('../lib/messaging/__mocks__/AnearMessaging')
 const mockParticipantEnterHandler = jest.fn()
 const mockParticipantRefreshHandler = jest.fn()
 const mockParticipantCloseHandler = jest.fn()
+const score = 42
 
 class TestEvent extends AnearEvent {
   initAppData() {
@@ -17,18 +18,40 @@ class TestEvent extends AnearEvent {
   get xStateConfig() {
     return {
       id: "testAnearEventStateMachine",
-      initial: 'waiting',
+      initial: 'waitingForHost',
+      context: {
+        score: score
+      },
       states: {
-        waiting: {
+        waitingForHost: {
           on: {
             JOIN: {
-              actions: 'enterHandler'
+              actions: 'enterHandler',
+              target: 'waitingForOpponent'
+            }
+          }
+        },
+        waitingForOpponent: {
+          on: {
+            JOIN: {
+              actions: 'enterHandler',
+              target: 'gameStart'
             },
             REFRESH: {
               actions: 'refreshHandler'
             },
             CLOSE: {
               actions: 'closeHandler'
+            }
+          }
+        },
+        gameStart: {
+          on: {
+            CLOSE: {
+              actions: 'closeHandler'
+            },
+            REFRESH: {
+              actions: 'refreshHandler'
             }
           }
         }
@@ -40,7 +63,7 @@ class TestEvent extends AnearEvent {
     return {
       actions: {
         enterHandler: (context, event) => {
-          mockParticipantEnterHandler(event.anearParticipant)
+          mockParticipantEnterHandler(context.score, event.anearParticipant)
         },
         refreshHandler: (context, event) => {
           mockParticipantRefreshHandler(event.anearParticipant)
@@ -110,7 +133,7 @@ test('can add participants, not hosted', async () => {
 
   expect(p1.userType).toBe("participant")
   expect(mockParticipantEnterHandler).toHaveBeenCalledTimes(1)
-  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(p1)
+  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(score, p1)
   expect(t.participants.numActive(false)).toBe(1)
   expect(t.participants.host).toStrictEqual({})
 
@@ -123,7 +146,7 @@ test('can add participants, not hosted', async () => {
   }
 
   expect(mockParticipantEnterHandler).toHaveBeenCalledTimes(2)
-  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(p2)
+  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(score, p2)
   expect(t.participants.numActive(false)).toBe(2)
   expect(t.participants.get(p2).name).toBe("bbondfl93")
   expect(p2.userType).toBe("participant")
@@ -167,7 +190,7 @@ test('can add participant, hosted', async () => {
 
   expect(host.userType).toBe("host")
   expect(mockParticipantEnterHandler).toHaveBeenCalledTimes(1)
-  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(host)
+  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(score, host)
   expect(t.participants.host.name).toBe('foxhole_host')
   expect(t.participants.numActive(false)).toBe(0) // event creator when hosted isn't active participant
 
@@ -180,7 +203,7 @@ test('can add participant, hosted', async () => {
   }
 
   expect(mockParticipantEnterHandler).toHaveBeenCalledTimes(2)
-  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(p2)
+  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(score, p2)
   expect(t.participants.numActive(false)).toBe(1)
   expect(t.participants.get(p2).name).toBe('bbondfl93')
 
@@ -190,6 +213,8 @@ test('can add participant, hosted', async () => {
     await t.update()
     t = await TestEvent.getFromStorage(id, MessagingStub)
     await t.remove()
+    await host.remove()
+    await p2.remove()
   } catch(err) {
     throw new Error(`test failed: ${err}`)
   }
