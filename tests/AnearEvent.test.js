@@ -8,6 +8,63 @@ const mockParticipantRefreshHandler = jest.fn()
 const mockParticipantCloseHandler = jest.fn()
 const score = 42
 
+const TicTacToeMachineConfig = anearEvent => ({
+  id: "testAnearEventStateMachine",
+  initial: 'waitingForHost',
+  context: {
+    score: score
+  },
+  states: {
+    waitingForHost: {
+      on: {
+        JOIN: {
+          actions: 'enterHandler',
+          target: 'waitingForOpponent'
+        }
+      }
+    },
+    waitingForOpponent: {
+      on: {
+        JOIN: {
+          actions: 'enterHandler',
+          target: 'gameStart'
+        },
+        REFRESH: {
+          actions: 'refreshHandler'
+        },
+        CLOSE: {
+          actions: 'closeHandler'
+        }
+      }
+    },
+    gameStart: {
+      on: {
+        CLOSE: {
+          actions: 'closeHandler'
+        },
+        REFRESH: {
+          actions: 'refreshHandler'
+        }
+      }
+    }
+  }
+})
+
+const TicTacToeMachineOptions = anearEvent => ({
+  actions: {
+    enterHandler: (context, event) => {
+      anearEvent.myParticipantEnterHandler(context.score, event.anearParticipant)
+    },
+    refreshHandler: (context, event) => {
+      anearEvent.myParticipantRefreshHandler(event.anearParticipant)
+    },
+    closeHandler: (context, event) => {
+      anearEvent.myParticipantCloseHandler(event.anearParticipant)
+    }
+  }
+})
+
+
 class TestEvent extends AnearEvent {
   initAppData() {
     return {
@@ -15,64 +72,22 @@ class TestEvent extends AnearEvent {
     }
   }
 
-  get xStateConfig() {
-    return {
-      id: "testAnearEventStateMachine",
-      initial: 'waitingForHost',
-      context: {
-        score: score
-      },
-      states: {
-        waitingForHost: {
-          on: {
-            JOIN: {
-              actions: 'enterHandler',
-              target: 'waitingForOpponent'
-            }
-          }
-        },
-        waitingForOpponent: {
-          on: {
-            JOIN: {
-              actions: 'enterHandler',
-              target: 'gameStart'
-            },
-            REFRESH: {
-              actions: 'refreshHandler'
-            },
-            CLOSE: {
-              actions: 'closeHandler'
-            }
-          }
-        },
-        gameStart: {
-          on: {
-            CLOSE: {
-              actions: 'closeHandler'
-            },
-            REFRESH: {
-              actions: 'refreshHandler'
-            }
-          }
-        }
-      }
-    }
+  stateMachineConfig() {
+    return TicTacToeMachineConfig(this)
   }
 
-  get xStateOptions() {
-    return {
-      actions: {
-        enterHandler: (context, event) => {
-          mockParticipantEnterHandler(context.score, event.anearParticipant)
-        },
-        refreshHandler: (context, event) => {
-          mockParticipantRefreshHandler(event.anearParticipant)
-        },
-        closeHandler: (context, event) => {
-          mockParticipantCloseHandler(event.anearParticipant)
-        }
-      }
-    }
+  stateMachineOptions() {
+    return TicTacToeMachineOptions(this)
+  }
+
+  myParticipantEnterHandler(...args) {
+    mockParticipantEnterHandler(...args)
+  }
+  myParticipantCloseHandler(...args) {
+    mockParticipantCloseHandler(...args)
+  }
+  myParticipantRefreshHandler(...args) {
+    mockParticipantRefreshHandler(...args)
   }
 }
 
@@ -102,7 +117,7 @@ const newTestEvent = (hosted = false) => {
   return t
 }
 
-test('constructor', () => {
+test('constructor with Default Xstate Config', () => {
   const a = new TestEvent(chatEvent, MessagingStub)
   expect(a.id).toBe(chatEvent.data.id)
   expect(a.relationships.user.data.type).toBe("users")
