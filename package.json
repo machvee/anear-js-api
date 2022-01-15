@@ -1,6 +1,6 @@
 {
   "name": "anear-js-api",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Javascript Developer API for Anear Apps",
   "main": "lib/index.js",
   "scripts": {
@@ -18,11 +18,11 @@
   "homepage": "https://github.com/machvee/anear-js-api#readme",
   "dependencies": {
     "ably": "^1.2.9",
-    "async-lock": "^1.2.8",
+    "async-mutex": "^0.3.2",
     "async-redis": "^2.0.0",
     "node-fetch": "^2.6.1",
-    "node-logger": "0.0.1",
-    "qs": "^6.10.1"
+    "qs": "^6.10.1",
+    "simple-node-logger": "^21.8.12"
   },
   "devDependencies": {
     "fakeredis": "^2.0.0",
