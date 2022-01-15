@@ -211,29 +211,3 @@ test('can be retrieved back from storage with participants, not hosted', async (
     throw new Error(`test failed: ${err}`)
   }
 })
-
-test('can be retrieved back from storage with lock, not hosted', async () => {
-  try {
-    const testEvent = newTestEvent(false)
-    await testEvent.persist()
-    const anEvent = await TestEvent.getWithLockFromStorage(
-      testEvent.data.id,
-      async rehydratedTestEvent => {
-        expect(rehydratedTestEvent.id).toBe(testEvent.data.id)
-        expect(rehydratedTestEvent.relationships['user'].data.type).toBe("users")
-        expect(rehydratedTestEvent.relationships['zone'].data.type).toBe("zones")
-        expect(rehydratedTestEvent.participantTimeout).toBe(32000)
-        expect(rehydratedTestEvent.included[0].relationships.app.data.id).toBe("5b9d9838-17de-4a80-8a64-744c222ba722")
-        expect(rehydratedTestEvent.appData.log[0]).toBe('message1')
-        expect(rehydratedTestEvent.appData.state).toBe('live')
-        rehydratedTestEvent.appData.state = 'closed'
-        await rehydratedTestEvent.update()
-      },
-      MessagingStub
-    )
-    expect(anEvent.appData.log[0]).toBe('message1')
-    await testEvent.remove()
-  } catch(err) {
-    throw new Error(`test failed: ${err}`)
-  }
-})
