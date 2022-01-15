@@ -64,7 +64,6 @@ const TicTacToeMachineOptions = anearEvent => ({
   }
 })
 
-
 class TestEvent extends AnearEvent {
   initAppData() {
     return {
@@ -88,6 +87,28 @@ class TestEvent extends AnearEvent {
   }
   myParticipantRefreshHandler(...args) {
     mockParticipantRefreshHandler(...args)
+  }
+}
+
+const defaultContext = {
+  scores: [83, 22]
+}
+
+class TestEventWithDefaultXState extends AnearEvent {
+  initAppData() {
+    return defaultContext
+  }
+
+  async participantEnterEventCallback(anearParticipant) {
+    mockParticipantEnterHandler(anearParticipant)
+  }
+
+  async participantRefreshEventCallback(anearParticipant) {
+    mockParticipantRefreshHandler(anearParticipant)
+  }
+
+  async participantCloseEventCallback(anearParticipant) {
+    mockParticipantCloseHandler(anearParticipant)
   }
 }
 
@@ -117,10 +138,39 @@ const newTestEvent = (hosted = false) => {
   return t
 }
 
-test('constructor with Default Xstate Config', () => {
-  const a = new TestEvent(chatEvent, MessagingStub)
-  expect(a.id).toBe(chatEvent.data.id)
-  expect(a.relationships.user.data.type).toBe("users")
+test('constructor with Default Xstate Config', async () => {
+  let t = new TestEventWithDefaultXState(chatEvent, MessagingStub)
+  const id = t.id
+  expect(t.id).toBe(chatEvent.data.id)
+  expect(t.relationships.user.data.type).toBe("users")
+  const p1 = new TestPlayer(chatParticipant1)
+
+  try {
+    await t.participantEnter(p1)
+    await t.persist()
+    t = await TestEventWithDefaultXState.getFromStorage(id, MessagingStub)
+  } catch(err) {
+    throw new Error(`test failed: ${err}`)
+  }
+
+  expect(p1.userType).toBe("participant")
+  expect(mockParticipantEnterHandler).toHaveBeenCalledTimes(1)
+  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(p1)
+  expect(t.participants.numActive(false)).toBe(1)
+
+  try {
+    await t.participantClose(p1)
+    await t.update()
+    //t = await TestEvent.getFromStorage(id, MessagingStub)
+    await t.remove()
+    await p1.remove()
+  } catch(err) {
+    throw new Error(`test failed: ${err}`)
+  }
+
+  expect(mockParticipantCloseHandler).toHaveBeenCalledWith(p1)
+  expect(mockParticipantCloseHandler).toHaveBeenCalledTimes(1)
+  expect(t.participants.numActive(false)).toBe(0)
 })
 
 test('can be persisted and removed repeatedly in storage', async () => {
