@@ -310,9 +310,9 @@ test('can be retrieved back from storage with participants, not hosted', async (
   expect(rehydratedTestEvent.relationships['zone'].data.type).toBe("zones")
   expect(rehydratedTestEvent.participantTimeout).toBe(32000)
   expect(rehydratedTestEvent.included[0].relationships.app.data.id).toBe("5b9d9838-17de-4a80-8a64-744c222ba722")
-  expect(rehydratedTestEvent.appData.log[1]).toBe('message2')
-  expect(rehydratedPlayer1.appData.name).toBe('machvee')
-  expect(rehydratedPlayer2.appData.name).toBe('bbondfl93')
+  expect(rehydratedTestEvent.context.log[1]).toBe('message2')
+  expect(rehydratedPlayer1.context.name).toBe('machvee')
+  expect(rehydratedPlayer2.context.name).toBe('bbondfl93')
 
   await rehydratedTestEvent.participantClose(rehydratedPlayer1)
   await rehydratedTestEvent.participantClose(rehydratedPlayer2)

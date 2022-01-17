@@ -14,7 +14,7 @@ test('constructor', () =>  {
   const t = new TestParticipant(player1)
   expect(t.id).toBe(player1.data.id)
   expect(t.relationships.user.data.type).toBe("users")
-  expect(t.appData.score).toBe(97)
+  expect(t.context.score).toBe(97)
 })
 
 test('participant can be repeatedly rehydrated and updated', async () => {
@@ -24,13 +24,13 @@ test('participant can be repeatedly rehydrated and updated', async () => {
 
     let p = await TestParticipant.getFromStorage(player1.data.id)
 
-    expect(p.appData.responses).toStrictEqual(['A', 'C', 'D', 'A'])
-    p.appData.responses.push('B')
+    expect(p.context.responses).toStrictEqual(['A', 'C', 'D', 'A'])
+    p.context.responses.push('B')
 
     await p.update()
 
     p = await TestParticipant.getFromStorage(player1.data.id)
-    expect(p.appData.responses[4]).toBe('B')
+    expect(p.context.responses[4]).toBe('B')
 
     await p.remove()
 
