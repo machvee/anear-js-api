@@ -53,7 +53,7 @@ const TicTacToeMachineConfig = anearEvent => ({
 const TicTacToeMachineOptions = anearEvent => ({
   actions: {
     enterHandler: (context, event) => {
-      anearEvent.myParticipantEnterHandler(context.score, event.anearParticipant)
+      anearEvent.myParticipantEnterHandler(event.anearParticipant)
     },
     refreshHandler: (context, event) => {
       anearEvent.myParticipantRefreshHandler(event.anearParticipant)
@@ -71,7 +71,7 @@ class TestEvent extends AnearEvent {
     }
   }
 
-  stateMachineConfig() {
+  stateMachineConfig(previousState) {
     return TicTacToeMachineConfig(this)
   }
 
@@ -79,14 +79,14 @@ class TestEvent extends AnearEvent {
     return TicTacToeMachineOptions(this)
   }
 
-  myParticipantEnterHandler(...args) {
-    mockParticipantEnterHandler(...args)
+  async myParticipantEnterHandler(...args) {
+    return mockParticipantEnterHandler(...args)
   }
-  myParticipantCloseHandler(...args) {
-    mockParticipantCloseHandler(...args)
+  async myParticipantCloseHandler(...args) {
+    return mockParticipantCloseHandler(...args)
   }
-  myParticipantRefreshHandler(...args) {
-    mockParticipantRefreshHandler(...args)
+  async myParticipantRefreshHandler(...args) {
+    return mockParticipantRefreshHandler(...args)
   }
 }
 
@@ -99,16 +99,19 @@ class TestEventWithDefaultXState extends AnearEvent {
     return defaultContext
   }
 
-  async participantEnterEventCallback(anearParticipant) {
+  participantEnterEventCallback(anearParticipant) {
     mockParticipantEnterHandler(anearParticipant)
+    return Promise.resolve()
   }
 
-  async participantRefreshEventCallback(anearParticipant) {
+  participantRefreshEventCallback(anearParticipant) {
     mockParticipantRefreshHandler(anearParticipant)
+    return Promise.resolve()
   }
 
-  async participantCloseEventCallback(anearParticipant) {
+  participantCloseEventCallback(anearParticipant) {
     mockParticipantCloseHandler(anearParticipant)
+    return Promise.resolve()
   }
 }
 
@@ -138,39 +141,50 @@ const newTestEvent = (hosted = false) => {
   return t
 }
 
-test('constructor with Default Xstate Config', async () => {
-  let t = new TestEventWithDefaultXState(chatEvent, MessagingStub)
+test('participant enter with Default Xstate Config', async () => {
+  const t = new TestEventWithDefaultXState(chatEvent, MessagingStub)
   const id = t.id
   expect(t.id).toBe(chatEvent.data.id)
   expect(t.relationships.user.data.type).toBe("users")
+  expect(t.anearStateMachine.currentStateName).toBe("eventActive")
   const p1 = new TestPlayer(chatParticipant1)
 
-  try {
-    await t.participantEnter(p1)
-    await t.persist()
-    t = await TestEventWithDefaultXState.getFromStorage(id, MessagingStub)
-  } catch(err) {
-    throw new Error(`test failed: ${err}`)
-  }
+  await t.participantEnter(p1)
+  await t.persist()
+  await t.remove()
 
   expect(p1.userType).toBe("participant")
   expect(mockParticipantEnterHandler).toHaveBeenCalledTimes(1)
   expect(mockParticipantEnterHandler).toHaveBeenCalledWith(p1)
   expect(t.participants.numActive(false)).toBe(1)
+  await p1.remove()
+})
 
-  try {
-    await t.participantClose(p1)
-    await t.update()
-    //t = await TestEvent.getFromStorage(id, MessagingStub)
-    await t.remove()
-    await p1.remove()
-  } catch(err) {
-    throw new Error(`test failed: ${err}`)
-  }
+test('participant close with Default Xstate Config', async () => {
+  const t = new TestEventWithDefaultXState(chatEvent, MessagingStub)
+  const p1 = new TestPlayer(chatParticipant1)
+
+  await t.participantClose(p1)
+  await t.update()
 
   expect(mockParticipantCloseHandler).toHaveBeenCalledWith(p1)
   expect(mockParticipantCloseHandler).toHaveBeenCalledTimes(1)
   expect(t.participants.numActive(false)).toBe(0)
+
+  await t.remove()
+})
+
+test('participant refresh with Default Xstate Config', async () => {
+  const t = new TestEventWithDefaultXState(chatEvent, MessagingStub)
+  const p1 = new TestPlayer(chatParticipant1)
+
+  await t.refreshParticipant(p1)
+  await t.update()
+
+  expect(mockParticipantRefreshHandler).toHaveBeenCalledWith(p1)
+  expect(mockParticipantRefreshHandler).toHaveBeenCalledTimes(1)
+  await p1.remove()
+  await t.remove()
 })
 
 test('can be persisted and removed repeatedly in storage', async () => {
@@ -188,45 +202,28 @@ test('can add participants, not hosted', async () => {
   const p2 = new TestPlayer(chatParticipant2)
   const id = t.id
 
-  try {
-    await t.participantEnter(p1)
-    await t.persist()
-    t = await TestEvent.getFromStorage(id, MessagingStub)
-  } catch(err) {
-    throw new Error(`test failed: ${err}`)
-  }
+  await t.participantEnter(p1)
+  await t.persist()
 
   expect(p1.userType).toBe("participant")
   expect(mockParticipantEnterHandler).toHaveBeenCalledTimes(1)
-  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(score, p1)
+  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(p1)
   expect(t.participants.numActive(false)).toBe(1)
   expect(t.participants.host).toStrictEqual({})
 
-  try {
-    await t.participantEnter(p2)
-    await t.update()
-    //t = await TestEvent.getFromStorage(id, MessagingStub)
-  } catch(err) {
-    throw new Error(`test failed: ${err}`)
-  }
+  await t.participantEnter(p2)
+  await t.update()
 
   expect(mockParticipantEnterHandler).toHaveBeenCalledTimes(2)
-  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(score, p2)
+  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(p2)
   expect(t.participants.numActive(false)).toBe(2)
   expect(t.participants.get(p2).name).toBe("bbondfl93")
   expect(p2.userType).toBe("participant")
 
-  try {
-    await t.participantClose(p1)
-    await t.participantClose(p2)
-    await t.update()
-    //t = await TestEvent.getFromStorage(id, MessagingStub)
-    await t.remove()
-    await p1.remove()
-    await p2.remove()
-  } catch(err) {
-    throw new Error(`test failed: ${err}`)
-  }
+  await t.participantClose(p1)
+  await t.participantClose(p2)
+  await t.update()
+  await t.remove()
 
   expect(mockParticipantCloseHandler).toHaveBeenCalledWith(p1)
   expect(mockParticipantCloseHandler).toHaveBeenCalledWith(p2)
@@ -245,44 +242,27 @@ test('can add participant, hosted', async () => {
   const p2 = new TestPlayer(chatParticipant2)
   const id = t.id
 
-  try {
-    await t.participantEnter(host)
-    await t.persist()
-    t = await TestEvent.getFromStorage(id, MessagingStub)
-  } catch(err) {
-    throw new Error(`test failed: ${err}`)
-  }
+  await t.participantEnter(host)
+  await t.persist()
 
   expect(host.userType).toBe("host")
   expect(mockParticipantEnterHandler).toHaveBeenCalledTimes(1)
-  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(score, host)
+  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(host)
   expect(t.participants.host.name).toBe('foxhole_host')
   expect(t.participants.numActive(false)).toBe(0) // event creator when hosted isn't active participant
 
-  try {
-    await t.participantEnter(p2)
-    await t.update()
-    t = await TestEvent.getFromStorage(id, MessagingStub)
-  } catch(err) {
-    throw new Error(`test failed: ${err}`)
-  }
+  await t.participantEnter(p2)
+  await t.update()
 
   expect(mockParticipantEnterHandler).toHaveBeenCalledTimes(2)
-  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(score, p2)
+  expect(mockParticipantEnterHandler).toHaveBeenCalledWith(p2)
   expect(t.participants.numActive(false)).toBe(1)
   expect(t.participants.get(p2).name).toBe('bbondfl93')
 
-  try {
-    await t.participantClose(host)
-    await t.participantClose(p2)
-    await t.update()
-    t = await TestEvent.getFromStorage(id, MessagingStub)
-    await t.remove()
-    await host.remove()
-    await p2.remove()
-  } catch(err) {
-    throw new Error(`test failed: ${err}`)
-  }
+  await t.participantClose(host)
+  await t.participantClose(p2)
+  await t.update()
+  await t.remove()
 
   expect(mockParticipantCloseHandler).toHaveBeenCalledWith(host)
   expect(mockParticipantCloseHandler).toHaveBeenCalledWith(p2)
@@ -295,14 +275,9 @@ test('can be retrieved back from storage with participants, not hosted', async (
   const p1 = new TestPlayer(chatParticipant1)
   const p2 = new TestPlayer(chatParticipant2)
 
-  try {
-    await testEvent.participantEnter(p1)
-    await testEvent.participantEnter(p2)
-
-    await testEvent.persist()
-  } catch(err) {
-    throw new Error(`test failed: ${err}`)
-  }
+  await testEvent.participantEnter(p1)
+  await testEvent.participantEnter(p2)
+  await testEvent.persist()
 
   const rehydratedTestEvent = await TestEvent.getFromStorage(testEvent.id, MessagingStub)
   const rehydratedPlayer1 = await TestPlayer.getFromStorage(p1.id)
@@ -318,11 +293,7 @@ test('can be retrieved back from storage with participants, not hosted', async (
   expect(rehydratedPlayer1.appData.name).toBe('machvee')
   expect(rehydratedPlayer2.appData.name).toBe('bbondfl93')
 
-  try {
-    await rehydratedTestEvent.participantClose(rehydratedPlayer1)
-    await rehydratedTestEvent.participantClose(rehydratedPlayer2)
-    await rehydratedTestEvent.remove()
-  } catch(err) {
-    throw new Error(`test failed: ${err}`)
-  }
+  await rehydratedTestEvent.participantClose(rehydratedPlayer1)
+  await rehydratedTestEvent.participantClose(rehydratedPlayer2)
+  await rehydratedTestEvent.remove()
 })
