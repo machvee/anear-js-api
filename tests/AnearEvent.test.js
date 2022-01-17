@@ -6,6 +6,7 @@ const MockMessaging = require('../lib/messaging/__mocks__/AnearMessaging')
 const mockParticipantEnterHandler = jest.fn()
 const mockParticipantRefreshHandler = jest.fn()
 const mockParticipantCloseHandler = jest.fn()
+const mockParticipantActionHandler = jest.fn()
 const score = 42
 
 const TicTacToeMachineConfig = anearEvent => ({
@@ -113,6 +114,11 @@ class TestEventWithDefaultXState extends AnearEvent {
     mockParticipantCloseHandler(anearParticipant)
     return Promise.resolve()
   }
+
+  participantActionEventCallback(anearParticipant, actionEventName, payload) {
+    mockParticipantActionHandler(anearParticipant, actionEventName, payload)
+    return Promise.resolve()
+  }
 }
 
 class TestPlayer extends AnearParticipant {
@@ -183,6 +189,21 @@ test('participant refresh with Default Xstate Config', async () => {
 
   expect(mockParticipantRefreshHandler).toHaveBeenCalledWith(p1)
   expect(mockParticipantRefreshHandler).toHaveBeenCalledTimes(1)
+  await p1.remove()
+  await t.remove()
+})
+
+test('participant action with Default Xstate Config', async () => {
+  const t = new TestEventWithDefaultXState(chatEvent, MessagingStub)
+  const p1 = new TestPlayer(chatParticipant1)
+  const eventName = "TEST_ACTION"
+  const payload = {x: 1, y: 99}
+
+  await t.participantAction(p1, eventName, payload)
+  await t.update()
+
+  expect(mockParticipantActionHandler).toHaveBeenCalledWith(p1, eventName, payload)
+  expect(mockParticipantActionHandler).toHaveBeenCalledTimes(1)
   await p1.remove()
   await t.remove()
 })
