@@ -3,7 +3,7 @@ const AnearParticipant = require('../lib/models/AnearParticipant')
 const { AnearParticipantFixture1: player1 } =  require('./fixtures')
 
 class TestParticipant extends AnearParticipant {
-  initAppData() {
+  initContext() {
     return {score: 97, responses: ['A', 'C', 'D', 'A']}
   }
 }

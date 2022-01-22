@@ -1,4 +1,5 @@
 "use strict"
+const { assign } = require('xstate')
 const AnearEvent = require('../lib/models/AnearEvent')
 const AnearParticipant = require('../lib/models/AnearParticipant')
 const MockMessaging = require('../lib/messaging/__mocks__/AnearMessaging')
@@ -7,13 +8,12 @@ const mockParticipantEnterHandler = jest.fn()
 const mockParticipantRefreshHandler = jest.fn()
 const mockParticipantCloseHandler = jest.fn()
 const mockParticipantActionHandler = jest.fn()
-const score = 42
 
 const TicTacToeMachineConfig = anearEvent => ({
   id: "testAnearEventStateMachine",
   initial: 'waitingForHost',
   context: {
-    score: score
+    score: 0
   },
   states: {
     waitingForHost: {
@@ -40,6 +40,9 @@ const TicTacToeMachineConfig = anearEvent => ({
     },
     gameStart: {
       on: {
+        BULLSEYE: {
+          actions: 'actionHandler'
+        },
         CLOSE: {
           actions: 'closeHandler'
         },
@@ -61,17 +64,12 @@ const TicTacToeMachineOptions = anearEvent => ({
     },
     closeHandler: (context, event) => {
       anearEvent.myParticipantCloseHandler(event.anearParticipant)
-    }
+    },
+    actionHandler: assign({score: (context, event) => context.score + event.payload.points})
   }
 })
 
 class TestEvent extends AnearEvent {
-  initAppData() {
-    return {
-      log: ["message1", "message2"],
-    }
-  }
-
   stateMachineConfig(previousState) {
     return TicTacToeMachineConfig(this)
   }
@@ -92,11 +90,11 @@ class TestEvent extends AnearEvent {
 }
 
 const defaultContext = {
-  scores: [83, 22]
+  playerScores: [83, 22]
 }
 
 class TestEventWithDefaultXState extends AnearEvent {
-  initAppData() {
+  initContext() {
     return defaultContext
   }
 
@@ -122,7 +120,7 @@ class TestEventWithDefaultXState extends AnearEvent {
 }
 
 class TestPlayer extends AnearParticipant {
-  initAppData() {
+  initContext() {
     return {
       name: this.name,
       age: 26,
@@ -152,7 +150,7 @@ test('participant enter with Default Xstate Config', async () => {
   const id = t.id
   expect(t.id).toBe(chatEvent.data.id)
   expect(t.relationships.user.data.type).toBe("users")
-  expect(t.anearStateMachine.currentStateName).toBe("eventActive")
+  expect(t.anearStateMachine.currentState.value).toBe("eventActive")
   const p1 = new TestPlayer(chatParticipant1)
 
   await t.participantEnter(p1)
@@ -310,11 +308,37 @@ test('can be retrieved back from storage with participants, not hosted', async (
   expect(rehydratedTestEvent.relationships['zone'].data.type).toBe("zones")
   expect(rehydratedTestEvent.participantTimeout).toBe(32000)
   expect(rehydratedTestEvent.included[0].relationships.app.data.id).toBe("5b9d9838-17de-4a80-8a64-744c222ba722")
-  expect(rehydratedTestEvent.context.log[1]).toBe('message2')
   expect(rehydratedPlayer1.context.name).toBe('machvee')
   expect(rehydratedPlayer2.context.name).toBe('bbondfl93')
 
   await rehydratedTestEvent.participantClose(rehydratedPlayer1)
   await rehydratedTestEvent.participantClose(rehydratedPlayer2)
   await rehydratedTestEvent.remove()
+})
+
+test('can update state machine context via Action events', async () => {
+  const t = newTestEvent(false)
+  const p1 = new TestPlayer(chatParticipant1)
+  const p2 = new TestPlayer(chatParticipant2)
+
+  await t.participantEnter(p1)
+  await t.participantEnter(p2)
+  await t.persist()
+
+  const eventName = "BULLSEYE"
+  const payload = {points: 1}
+
+  await t.participantAction(p1, eventName, payload)
+  await t.update()
+
+  expect(t.anearStateMachine.context.score).toBe(1)
+
+  await t.participantAction(p2, eventName, payload)
+  await t.update()
+
+  expect(t.anearStateMachine.context.score).toBe(2)
+
+  await t.participantClose(p1)
+  await t.participantClose(p2)
+  await t.remove()
 })
