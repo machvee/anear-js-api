@@ -12,9 +12,6 @@ const mockParticipantActionHandler = jest.fn()
 const TicTacToeMachineConfig = anearEvent => ({
   id: "testAnearEventStateMachine",
   initial: 'waitingForHost',
-  context: {
-    score: 0
-  },
   states: {
     waitingForHost: {
       on: {
@@ -74,6 +71,12 @@ class TestEvent extends AnearEvent {
     return TicTacToeMachineConfig(this)
   }
 
+  initContext() {
+    return {
+      score: 90
+    }
+  }
+
   stateMachineOptions() {
     return TicTacToeMachineOptions(this)
   }
@@ -89,13 +92,12 @@ class TestEvent extends AnearEvent {
   }
 }
 
-const defaultContext = {
-  playerScores: [83, 22]
-}
 
 class TestEventWithDefaultXState extends AnearEvent {
   initContext() {
-    return defaultContext
+    return {
+      playerScores: [83, 22]
+    }
   }
 
   participantEnterEventCallback(anearParticipant) {
@@ -151,6 +153,7 @@ test('participant enter with Default Xstate Config', async () => {
   expect(t.id).toBe(chatEvent.data.id)
   expect(t.relationships.user.data.type).toBe("users")
   expect(t.anearStateMachine.currentState.value).toBe("eventActive")
+  expect(t.stateMachineContext.playerScores[0]).toBe(83)
   const p1 = new TestPlayer(chatParticipant1)
 
   await t.participantEnter(p1)
@@ -307,6 +310,7 @@ test('can be retrieved back from storage with participants, not hosted', async (
   expect(rehydratedTestEvent.relationships['user'].data.type).toBe("users")
   expect(rehydratedTestEvent.relationships['zone'].data.type).toBe("zones")
   expect(rehydratedTestEvent.participantTimeout).toBe(32000)
+  expect(rehydratedTestEvent.stateMachineContext.score).toBe(90)
   expect(rehydratedTestEvent.included[0].relationships.app.data.id).toBe("5b9d9838-17de-4a80-8a64-744c222ba722")
   expect(rehydratedPlayer1.context.name).toBe('machvee')
   expect(rehydratedPlayer2.context.name).toBe('bbondfl93')
@@ -331,12 +335,12 @@ test('can update state machine context via Action events', async () => {
   await t.participantAction(p1, eventName, payload)
   await t.update()
 
-  expect(t.anearStateMachine.context.score).toBe(1)
+  expect(t.anearStateMachine.context.score).toBe(91)
 
   await t.participantAction(p2, eventName, payload)
   await t.update()
 
-  expect(t.anearStateMachine.context.score).toBe(2)
+  expect(t.anearStateMachine.context.score).toBe(92)
 
   await t.participantClose(p1)
   await t.participantClose(p2)
