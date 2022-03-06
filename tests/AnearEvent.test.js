@@ -62,7 +62,7 @@ const TicTacToeMachineOptions = anearEvent => ({
     closeHandler: (context, event) => {
       anearEvent.myParticipantCloseHandler(event.anearParticipant)
     },
-    actionHandler: assign({score: (context, event) => context.score + event.payload.points})
+    actionHandler: assign({score: (context, event) => context.score + event.payload.points}),
   }
 })
 
@@ -164,6 +164,7 @@ test('participant enter with Default Xstate Config', async () => {
   expect(mockParticipantEnterHandler).toHaveBeenCalledTimes(1)
   expect(mockParticipantEnterHandler).toHaveBeenCalledWith(p1)
   expect(t.participants.numActive(false)).toBe(1)
+
   await p1.remove()
 })
 
