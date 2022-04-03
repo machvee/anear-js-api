@@ -1,6 +1,6 @@
 "use strict"
 const { assign } = require('xstate')
-const AnearEvent = require('../lib/models/AnearEvent')
+const { AnearEvent } = require('../lib/models/AnearEvent')
 const AnearParticipant = require('../lib/models/AnearParticipant')
 const MockMessaging = require('../lib/messaging/__mocks__/AnearMessaging')
 
@@ -54,27 +54,27 @@ const TicTacToeMachineConfig = anearEvent => ({
 const TicTacToeMachineOptions = anearEvent => ({
   actions: {
     enterHandler: (context, event) => {
-      anearEvent.myParticipantEnterHandler(event.anearParticipant)
+      anearEvent.myParticipantEnterHandler(event.participant)
     },
     refreshHandler: (context, event) => {
-      anearEvent.myParticipantRefreshHandler(event.anearParticipant)
+      anearEvent.myParticipantRefreshHandler(event.participant)
     },
     closeHandler: (context, event) => {
-      anearEvent.myParticipantCloseHandler(event.anearParticipant)
+      anearEvent.myParticipantCloseHandler(event.participant)
     },
     actionHandler: assign({score: (context, event) => context.score + event.payload.points}),
   }
 })
 
 class TestEvent extends AnearEvent {
-  stateMachineConfig(previousState) {
-    return TicTacToeMachineConfig(this)
-  }
-
   initContext() {
     return {
       score: 90
     }
+  }
+
+  stateMachineConfig() {
+    return TicTacToeMachineConfig(this)
   }
 
   stateMachineOptions() {
@@ -100,23 +100,23 @@ class TestEventWithDefaultXState extends AnearEvent {
     }
   }
 
-  participantEnterEventCallback(anearParticipant) {
-    mockParticipantEnterHandler(anearParticipant)
+  participantEnterEventCallback(participant) {
+    mockParticipantEnterHandler(participant)
     return Promise.resolve()
   }
 
-  participantRefreshEventCallback(anearParticipant) {
-    mockParticipantRefreshHandler(anearParticipant)
+  participantRefreshEventCallback(participant) {
+    mockParticipantRefreshHandler(participant)
     return Promise.resolve()
   }
 
-  participantCloseEventCallback(anearParticipant) {
-    mockParticipantCloseHandler(anearParticipant)
+  participantCloseEventCallback(participant) {
+    mockParticipantCloseHandler(participant)
     return Promise.resolve()
   }
 
-  participantActionEventCallback(anearParticipant, actionEventName, payload) {
-    mockParticipantActionHandler(anearParticipant, actionEventName, payload)
+  participantActionEventCallback(participant, actionEventName, payload) {
+    mockParticipantActionHandler(participant, actionEventName, payload)
     return Promise.resolve()
   }
 }
@@ -144,11 +144,19 @@ afterEach(() => {jest.clearAllMocks()})
 const newTestEvent = (hosted = false) => {
   const t = new TestEvent(chatEvent, MessagingStub)
   t.attributes.hosted = hosted
+  t.startStateMachine()
+  return t
+}
+
+const newTestEventWithDefaultXState = testEvent => {
+  const t = new TestEventWithDefaultXState(testEvent, MessagingStub)
+  t.startStateMachine()
   return t
 }
 
 test('participant enter with Default Xstate Config', async () => {
-  const t = new TestEventWithDefaultXState(chatEvent, MessagingStub)
+  const t = newTestEventWithDefaultXState(chatEvent)
+
   const id = t.id
   expect(t.id).toBe(chatEvent.data.id)
   expect(t.relationships.user.data.type).toBe("users")
@@ -169,7 +177,8 @@ test('participant enter with Default Xstate Config', async () => {
 })
 
 test('participant close with Default Xstate Config', async () => {
-  const t = new TestEventWithDefaultXState(chatEvent, MessagingStub)
+  const t = newTestEventWithDefaultXState(chatEvent)
+
   const p1 = new TestPlayer(chatParticipant1)
 
   await t.participantClose(p1)
@@ -183,7 +192,7 @@ test('participant close with Default Xstate Config', async () => {
 })
 
 test('participant refresh with Default Xstate Config', async () => {
-  const t = new TestEventWithDefaultXState(chatEvent, MessagingStub)
+  const t = newTestEventWithDefaultXState(chatEvent)
   const p1 = new TestPlayer(chatParticipant1)
 
   await t.refreshParticipant(p1)
@@ -196,7 +205,7 @@ test('participant refresh with Default Xstate Config', async () => {
 })
 
 test('participant action with Default Xstate Config', async () => {
-  const t = new TestEventWithDefaultXState(chatEvent, MessagingStub)
+  const t = newTestEventWithDefaultXState(chatEvent)
   const p1 = new TestPlayer(chatParticipant1)
   const eventName = "TEST_ACTION"
   const payload = {x: 1, y: 99}
@@ -305,6 +314,8 @@ test('can be retrieved back from storage with participants, not hosted', async (
   const rehydratedTestEvent = await TestEvent.getFromStorage(testEvent.id, MessagingStub)
   const rehydratedPlayer1 = await TestPlayer.getFromStorage(p1.id)
   const rehydratedPlayer2 = await TestPlayer.getFromStorage(p2.id)
+
+  rehydratedTestEvent.startStateMachine()
 
   expect(rehydratedTestEvent.participants.numActive(false)).toBe(2)
   expect(rehydratedTestEvent.id).toBe(testEvent.id)
