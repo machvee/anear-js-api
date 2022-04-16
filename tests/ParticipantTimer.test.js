@@ -47,3 +47,20 @@ test('start, pause, then resume', () => {
   jest.advanceTimersByTime(501);
   expect(callback).toHaveBeenCalledTimes(1)
 })
+
+test('start and interrupt multiple times', () => {
+  const callback = jest.fn()
+  const t = new ParticipantTimer(ParticipantId, callback)
+
+  t.start(1000, Now)
+  jest.advanceTimersByTime(500);
+  t.interrupt(Now + 500)
+  expect(t.timeRemaining).toEqual(500)
+  expect(t.isRunning).toBe(true)
+  jest.advanceTimersByTime(250);
+  t.interrupt(Now + 750)
+  expect(t.timeRemaining).toEqual(250)
+  expect(t.isRunning).toBe(true)
+  jest.advanceTimersByTime(501);
+  expect(callback).toHaveBeenCalledTimes(1)
+})
