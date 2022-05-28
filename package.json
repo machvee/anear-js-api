@@ -17,17 +17,17 @@
   },
   "homepage": "https://github.com/machvee/anear-js-api#readme",
   "dependencies": {
-    "ably": "^1.2.18",
+    "ably": "^1.2.22",
     "async-mutex": "^0.3.2",
     "async-redis": "^2.0.0",
     "cross-fetch": "^3.1.5",
-    "qs": "^6.10.1",
+    "qs": "^6.10.3",
     "simple-node-logger": "^21.8.12",
-    "xstate": "^4.26.1"
+    "xstate": "^4.32.1"
   },
   "devDependencies": {
     "fakeredis": "^2.0.0",
     "jest": "^26.6.3",
-    "node-notifier": ">=8.0.1"
+    "node-notifier": "^10.0.1"
   }
 }
