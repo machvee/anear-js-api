@@ -358,3 +358,23 @@ test('can update state machine context via Action events', async () => {
   await t.participantClose(p2)
   await t.remove()
 })
+
+test('can reset All ParticipantTimers', async () => {
+  const t = newTestEvent(false)
+  const p1 = new TestPlayer(chatParticipant1)
+  const p2 = new TestPlayer(chatParticipant2)
+
+  const resetMock = jest.spyOn(MessagingStub, "resetAllParticipantTimers");
+
+  await t.participantEnter(p1)
+  await t.participantEnter(p2)
+  await t.persist()
+
+  t.cancelParticipantTimers()
+
+  expect(resetMock).toHaveBeenCalledTimes(1)
+
+  await t.participantClose(p1)
+  await t.participantClose(p2)
+  await t.remove()
+})
