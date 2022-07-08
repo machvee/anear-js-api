@@ -1,6 +1,6 @@
 "use strict"
 const { assign } = require('xstate')
-const { AnearEvent } = require('../lib/models/AnearEvent')
+const AnearEvent = require('../lib/models/AnearEvent')
 const AnearParticipant = require('../lib/models/AnearParticipant')
 const MockMessaging = require('../lib/messaging/__mocks__/AnearMessaging')
 
