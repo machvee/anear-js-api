@@ -6,7 +6,7 @@ const MockMessaging = require('../lib/messaging/__mocks__/AnearMessaging')
 
 const mockParticipantEnterHandler = jest.fn()
 const mockParticipantRefreshHandler = jest.fn()
-const mockParticipantCloseHandler = jest.fn()
+const mockParticipantExitHandler = jest.fn()
 const mockParticipantActionHandler = jest.fn()
 
 const TicTacToeMachineConfig = anearEvent => ({
@@ -30,8 +30,8 @@ const TicTacToeMachineConfig = anearEvent => ({
         REFRESH: {
           actions: 'refreshHandler'
         },
-        CLOSE: {
-          actions: 'closeHandler'
+        PARTICIPANT_EXIT: {
+          actions: 'participantExitHandler'
         }
       }
     },
@@ -40,8 +40,8 @@ const TicTacToeMachineConfig = anearEvent => ({
         BULLSEYE: {
           actions: 'actionHandler'
         },
-        CLOSE: {
-          actions: 'closeHandler'
+        PARTICIPANT_EXIT: {
+          actions: 'participantExitHandler'
         },
         REFRESH: {
           actions: 'refreshHandler'
@@ -59,8 +59,8 @@ const TicTacToeMachineOptions = anearEvent => ({
     refreshHandler: (context, event) => {
       anearEvent.myParticipantRefreshHandler(event.participant)
     },
-    closeHandler: (context, event) => {
-      anearEvent.myParticipantCloseHandler(event.participant)
+    participantExitHandler: (context, event) => {
+      anearEvent.myParticipantExitHandler(event.participant)
     },
     actionHandler: assign({score: (context, event) => context.score + event.payload.points}),
   }
@@ -84,8 +84,8 @@ class TestEvent extends AnearEvent {
   async myParticipantEnterHandler(...args) {
     return mockParticipantEnterHandler(...args)
   }
-  async myParticipantCloseHandler(...args) {
-    return mockParticipantCloseHandler(...args)
+  async myParticipantExitHandler(...args) {
+    return mockParticipantExitHandler(...args)
   }
   async myParticipantRefreshHandler(...args) {
     return mockParticipantRefreshHandler(...args)
@@ -110,8 +110,8 @@ class TestEventWithDefaultXState extends AnearEvent {
     return Promise.resolve()
   }
 
-  participantCloseEventCallback(participant) {
-    mockParticipantCloseHandler(participant)
+  participantExitEventCallback(participant) {
+    mockParticipantExitHandler(participant)
     return Promise.resolve()
   }
 
@@ -181,11 +181,11 @@ test('participant close with Default Xstate Config', async () => {
 
   const p1 = new TestPlayer(chatParticipant1)
 
-  await t.participantClose(p1)
+  await t.participantExit(p1)
   await t.update()
 
-  expect(mockParticipantCloseHandler).toHaveBeenCalledWith(p1)
-  expect(mockParticipantCloseHandler).toHaveBeenCalledTimes(1)
+  expect(mockParticipantExitHandler).toHaveBeenCalledWith(p1)
+  expect(mockParticipantExitHandler).toHaveBeenCalledTimes(1)
   expect(t.participants.numActive(false)).toBe(0)
 
   await t.remove()
@@ -252,14 +252,14 @@ test('can add participants, not hosted', async () => {
   expect(t.participants.get(p2).name).toBe("bbondfl93")
   expect(p2.userType).toBe("participant")
 
-  await t.participantClose(p1)
-  await t.participantClose(p2)
+  await t.participantExit(p1)
+  await t.participantExit(p2)
   await t.update()
   await t.remove()
 
-  expect(mockParticipantCloseHandler).toHaveBeenCalledWith(p1)
-  expect(mockParticipantCloseHandler).toHaveBeenCalledWith(p2)
-  expect(mockParticipantCloseHandler).toHaveBeenCalledTimes(2)
+  expect(mockParticipantExitHandler).toHaveBeenCalledWith(p1)
+  expect(mockParticipantExitHandler).toHaveBeenCalledWith(p2)
+  expect(mockParticipantExitHandler).toHaveBeenCalledTimes(2)
   expect(t.participants.numActive(false)).toBe(0)
 })
 
@@ -291,14 +291,14 @@ test('can add participant, hosted', async () => {
   expect(t.participants.numActive(false)).toBe(1)
   expect(t.participants.get(p2).name).toBe('bbondfl93')
 
-  await t.participantClose(host)
-  await t.participantClose(p2)
+  await t.participantExit(host)
+  await t.participantExit(p2)
   await t.update()
   await t.remove()
 
-  expect(mockParticipantCloseHandler).toHaveBeenCalledWith(host)
-  expect(mockParticipantCloseHandler).toHaveBeenCalledWith(p2)
-  expect(mockParticipantCloseHandler).toHaveBeenCalledTimes(2)
+  expect(mockParticipantExitHandler).toHaveBeenCalledWith(host)
+  expect(mockParticipantExitHandler).toHaveBeenCalledWith(p2)
+  expect(mockParticipantExitHandler).toHaveBeenCalledTimes(2)
   expect(t.participants.numActive(false)).toBe(0)
 })
 
@@ -327,8 +327,8 @@ test('can be retrieved back from storage with participants, not hosted', async (
   expect(rehydratedPlayer1.context.name).toBe('machvee')
   expect(rehydratedPlayer2.context.name).toBe('bbondfl93')
 
-  await rehydratedTestEvent.participantClose(rehydratedPlayer1)
-  await rehydratedTestEvent.participantClose(rehydratedPlayer2)
+  await rehydratedTestEvent.participantExit(rehydratedPlayer1)
+  await rehydratedTestEvent.participantExit(rehydratedPlayer2)
   await rehydratedTestEvent.remove()
 })
 
@@ -354,8 +354,9 @@ test('can update state machine context via Action events', async () => {
 
   expect(t.anearStateMachine.context.score).toBe(92)
 
-  await t.participantClose(p1)
-  await t.participantClose(p2)
+  await t.participantExit(p1)
+  await t.participantExit(p2)
+  await t.closeOutParticipants()
   await t.remove()
 })
 
@@ -374,7 +375,7 @@ test('can reset All ParticipantTimers', async () => {
 
   expect(resetMock).toHaveBeenCalledTimes(1)
 
-  await t.participantClose(p1)
-  await t.participantClose(p2)
+  await t.participantExit(p1)
+  await t.participantExit(p2)
   await t.remove()
 })
