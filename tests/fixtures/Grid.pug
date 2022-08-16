@@ -3,7 +3,11 @@
 .grid
   .participant-name
     = participant.name
+  .participant-alias
+    = participant.context.alias
   .chat-name
-    = xContext.name
+    = context.name
   .message
-    = xEvent.text
+    = event.message
+  .status
+    = options.color

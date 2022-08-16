@@ -18,7 +18,6 @@ class Chat305Event extends AnearEvent {
 
 const MessagingStub = new MockMessaging()
 
-const ChatEvent = new Chat305Event(chatEventJson, MessagingStub)
 class ChatParticipant extends AnearParticipant {
   initContext() {
     return {
@@ -26,9 +25,6 @@ class ChatParticipant extends AnearParticipant {
       age: 23,
     }
   }
-}
-const NewView = anearEvent => {
-  return new View(anearEvent)
 }
 
 const MockXStateEvent = participant => ({
@@ -40,18 +36,31 @@ const MockXStateEvent = participant => ({
 afterAll(async () => await Chat305Event.close())
 
 test('constructor', () =>  {
-  const v = NewView(ChatEvent)
+  const chatEvent = new Chat305Event(chatEventJson, MessagingStub)
+  const v = new View(chatEvent)
   expect(v).toBe
 })
 
-test('view can render spectator view', async () => {
-  const v = NewView(ChatEvent)
+test('view can render a single participant', async () => {
+  const chatEvent = new Chat305Event(chatEventJson, MessagingStub)
+  const spy = jest.spyOn(chatEvent, 'publishEventPrivateMessage').mockImplementation(async () => null);
   const chatStar = new ChatParticipant(chatParticipant1Json)
-  await v.render(
-    ChatEvent.context,
+  const moveTimeout = 120000
+  const v = new View(chatEvent)
+  const html = '<div class="grid"><div class="participant-name">machvee</div>' 
+  + '<div class="participant-alias">Para-bebe</div><div class="chat-name">Chat 305</div>'
+  + '<div class="message">you up?</div><div class="status">red</div></div>'
+
+  await v.renderParticipant(
+    chatStar,
+    "tests/fixtures/Grid.pug",
+    chatEvent.context,
     MockXStateEvent(chatStar),
     {
-      participant: {template: "fixtures/Grid.pug", timeout: 120}
+      timeout: moveTimeout,
+      color: "red"
     }
   )
+  expect(spy).toHaveBeenCalledTimes(1)
+  expect(spy).toHaveBeenCalledWith(chatStar, html, moveTimeout)
 })
