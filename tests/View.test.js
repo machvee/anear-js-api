@@ -46,12 +46,11 @@ test('view can render a single participant', async () => {
   const spy = jest.spyOn(chatEvent, 'publishEventPrivateMessage').mockImplementation(async () => null);
   const chatStar = new ChatParticipant(chatParticipant1Json)
   const moveTimeout = 120000
-  const v = new View(chatEvent)
   const html = '<div class="grid"><div class="participant-name">machvee</div>' 
   + '<div class="participant-alias">Para-bebe</div><div class="chat-name">Chat 305</div>'
   + '<div class="message">you up?</div><div class="status">red</div></div>'
 
-  await v.renderParticipant(
+  await chatEvent.renderParticipant(
     chatStar,
     "tests/fixtures/views/PrivateGrid.pug",
     chatEvent.context,
@@ -70,11 +69,10 @@ test('view can render to all participant', async () => {
   const spy = jest.spyOn(chatEvent, 'publishEventParticipantsMessage').mockImplementation(async () => null);
   const lastStar = new ChatParticipant(chatParticipant1Json)
   const moveTimeout = 140000
-  const v = new View(chatEvent)
   const html = '<div class="grid"><div class="chat-name">Chat 305</div>'
   + '<div class="message">you up?</div><div class="status">blue</div></div>'
 
-  await v.renderAllParticipants(
+  await chatEvent.renderAllParticipants(
     "tests/fixtures/views/ParticipantsGrid.pug",
     chatEvent.context,
     MockXStateEvent(lastStar),
@@ -90,7 +88,6 @@ test('view can render to all participant', async () => {
 test('view can render to each participant privately', async () => {
   const chatEvent = new Chat305Event(chatEventJson, MessagingStub)
   const spy = jest.spyOn(chatEvent, 'publishEventPrivateMessage').mockImplementation(async () => null);
-  const v = new View(chatEvent)
   const lastStar1 = new ChatParticipant(chatParticipant1Json)
   const lastStar2 = new ChatParticipant(chatParticipant2Json)
   const html1 = '<div class="grid"><div class="participant-name">machvee</div>' 
@@ -100,7 +97,7 @@ test('view can render to each participant privately', async () => {
   + '<div class="participant-alias">Para-bebe</div><div class="chat-name">Chat 305</div>'
   + '<div class="message">you up?</div><div class="status">green</div></div>'
 
-  await v.renderEachParticipant(
+  await chatEvent.renderEachParticipant(
     [lastStar1, lastStar2],
     "tests/fixtures/views/PrivateGrid.pug",
     chatEvent.context,
@@ -118,11 +115,10 @@ test('view can render to spectators', async () => {
   const chatEvent = new Chat305Event(chatEventJson, MessagingStub)
   const spy = jest.spyOn(chatEvent, 'publishEventSpectatorsMessage').mockImplementation(async () => null);
   const lastStar = new ChatParticipant(chatParticipant1Json)
-  const v = new View(chatEvent)
   const html = '<div class="grid"><div class="chat-name">Chat 305</div>'
   + '<div class="message">you up?</div><div class="status">orange</div></div>'
 
-  await v.renderSpectators(
+  await chatEvent.renderSpectators(
     "tests/fixtures/views/ParticipantsGrid.pug",
     chatEvent.context,
     MockXStateEvent(lastStar),
@@ -133,4 +129,3 @@ test('view can render to spectators', async () => {
   expect(spy).toHaveBeenCalledTimes(1)
   expect(spy).toHaveBeenCalledWith(html)
 })
-
