@@ -114,3 +114,23 @@ test('view can render to each participant privately', async () => {
   expect(spy).toHaveBeenNthCalledWith(2, lastStar2, html2, 0)
 })
 
+test('view can render to spectators', async () => {
+  const chatEvent = new Chat305Event(chatEventJson, MessagingStub)
+  const spy = jest.spyOn(chatEvent, 'publishEventSpectatorsMessage').mockImplementation(async () => null);
+  const lastStar = new ChatParticipant(chatParticipant1Json)
+  const v = new View(chatEvent)
+  const html = '<div class="grid"><div class="chat-name">Chat 305</div>'
+  + '<div class="message">you up?</div><div class="status">orange</div></div>'
+
+  await v.renderSpectators(
+    "tests/fixtures/views/ParticipantsGrid.pug",
+    chatEvent.context,
+    MockXStateEvent(lastStar),
+    {
+      color: "orange"
+    }
+  )
+  expect(spy).toHaveBeenCalledTimes(1)
+  expect(spy).toHaveBeenCalledWith(html)
+})
+
