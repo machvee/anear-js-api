@@ -15,45 +15,43 @@ const GeoLocation = {lat: 25.8348343, lng: -80.38438434}
 const MockHostedEvent = {hosted: true}
 const MockNonHostedEvent = {hosted: false}
 
-const newActiveParticipants = (timestamp, json = participantsJSON) => {
-  const copy = JSON.parse(JSON.stringify(json))
-  const keys = Object.keys(copy.participants)
-  keys.forEach(
-    (k,i) => {
-      const p = copy.participants[k]
-      p.timestamp = timestamp - (i*2000)
-      p.state = 'active'
-    }
-  )
-  return new Participants(copy)
+const newActiveParticipants = (timestamp, anearEvent = MockHostedEvent) => {
+  const activeParticipants = JSON.parse(JSON.stringify(participantsJSON))
+  const participants = new Participants()
+  const aps = Object.values(activeParticipants)
+  aps.forEach((p, i) => participants.add(anearEvent, p, timestamp - (i*2000)))
+  return participants
 }
 
-const newCurrentParticipants = (timestamp, json = participantsJSON) => {
-  const copy = JSON.parse(JSON.stringify(json))
-  const keys = Object.keys(copy.participants)
-  keys.forEach(
-    (k,i) => {
-      const p = copy.participants[k]
+const newCurrentParticipants = (timestamp, jsonArgs = {}, anearEvent = MockHostedEvent) => {
+  const currentParticipants = JSON.parse(JSON.stringify(participantsJSON))
+  const participants = new Participants(jsonArgs)
+  let withTimestamp
+  const cps = Object.values(currentParticipants)
+  cps.forEach(
+    (p,i) => {
       if (p.state === 'active') {
-        p.timestamp = timestamp - (i*2000)
+        withTimestamp = timestamp - (i*2000)
       } else {
         // idle in the last 30 minutes
-        p.timestamp = timestamp - copy.idleMsecs
+        withTimestamp = timestamp - participants.idleMsecs
       }
+      participants.add(anearEvent, p, withTimestamp)
     }
   )
-  return new Participants(copy)
+  return participants
 }
 
 const now = new Date().getTime()
 
 test('constructor with JSON provided', () =>  {
-  const p = new Participants(participantsJSON)
+  const p = new Participants({idleMsecs: 23400, purgeMsecs: 678900})
   expect(p).toBeDefined()
-  expect(p.idleMsecs).toBe(participantsJSON.idleMsecs)
+  expect(p.idleMsecs).toBe(23400)
+  expect(p.purgeMsecs).toBe(678900)
 })
 
-test('constructor with NO JSON provided', () => {
+test('constructor with NO JSON provided has default idle and purge Msecs', () => {
   const p = new Participants()
   expect(p).toBeDefined()
   expect(p.idleMsecs).toBe(1800000)
@@ -61,12 +59,12 @@ test('constructor with NO JSON provided', () => {
   expect(p.all).toHaveLength(0)
 })
 
-test('constructor with null idle and purge msecs', () => {
-  const p = newActiveParticipants(now, {...participantsJSON, idleMsecs: null, purgeMsecs: null})
+test('constructor with null idle and purge msecs avoids idle purge', () => {
+  const p = newActiveParticipants(now, {idleMsecs: null, purgeMsecs: null})
   expect(p.idleMsecs).toBe(null)
   expect(p.purgeMsecs).toBe(null)
-  expect(p.idle()).toHaveLength(0)
-  expect(p.active()).toHaveLength(10)
+  expect(p.idle).toHaveLength(0)
+  expect(p.active).toHaveLength(10)
 
   const c = p.getById(idleId)
   expect(p.isIdle(c, now)).toBeFalsy()
@@ -111,7 +109,7 @@ test('getParticipant success', () =>  {
 })
 
 test('add() participant user', async () => {
-  const p = newCurrentParticipants(now)
+  const p = newCurrentParticipants(now, {}, MockNonHostedEvent)
   const participant = new AnearParticipant(visitor2JSON, MockNonHostedEvent)
   participant.geoLocation = GeoLocation
 
@@ -139,12 +137,12 @@ test('add() host user', async () => {
 
 test('active', () => {
   const p = newActiveParticipants(now)
-  expect(p.active()).toHaveLength(10)
+  expect(p.active).toHaveLength(10)
 })
 
 test('idle', () => {
   const p = newCurrentParticipants(now)
-  expect(p.idle()).toHaveLength(2)
+  expect(p.idle).toHaveLength(2)
 })
 
 test('toJSON', () => {
@@ -191,8 +189,8 @@ test('purge host user-type', () => {
 test('updateState will leave state unchanged when timeout criteria not met', () => {
   const p = newCurrentParticipants(now)
   p.updateState(now)
-  expect(p.active()).toHaveLength(8)
-  expect(p.idle()).toHaveLength(2)
+  expect(p.active).toHaveLength(8)
+  expect(p.idle).toHaveLength(2)
   expect(p.numActive()).toBe(8)
   expect(p.numIdle()).toBe(2)
 })
@@ -200,7 +198,7 @@ test('updateState will leave state unchanged when timeout criteria not met', () 
 test('updateState will mark active to idle when timeout reached', () => {
   const current = now
   const p = newCurrentParticipants(current)
-  expect(p.active()).toHaveLength(8)
+  expect(p.active).toHaveLength(8)
   p.updateState(current + p.idleMsecs + 1000)
   expect(Object.values(p.all).
     filter(p => p.state === 'active')).toHaveLength(0)
@@ -209,7 +207,7 @@ test('updateState will mark active to idle when timeout reached', () => {
 test('updateState will purge idle participants', () => {
   const current = now
   const p = newCurrentParticipants(current)
-  const idlers = p.idle()
+  const idlers = p.idle
   expect(idlers).toHaveLength(2)
   p.updateState(current + p.purgeMsecs + 1000)
   idlers.forEach(c => expect(p.getById(c.id)).toBeUndefined())
