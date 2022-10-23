@@ -112,10 +112,10 @@ test('getParticipant success', () =>  {
 
 test('add() participant user', async () => {
   const p = newCurrentParticipants(now)
-  const participant = new AnearParticipant(visitor2JSON)
+  const participant = new AnearParticipant(visitor2JSON, MockNonHostedEvent)
   participant.geoLocation = GeoLocation
 
-  p.add(MockNonHostedEvent, participant)
+  p.add(participant)
   const part = p.get(participant)
   expect(part.name).toBe("bbondfl93")
   expect(part.avatarUrl).toBe("https://s3.amazonaws.com/anearassets/barbara_bond.png")
@@ -126,10 +126,10 @@ test('add() participant user', async () => {
 
 test('add() host user', async () => {
   const p = newCurrentParticipants(now)
-  const host = new AnearParticipant(hostJSON)
+  const host = new AnearParticipant(hostJSON, MockNonHostedEvent)
   host.geoLocation = GeoLocation
 
-  p.add(MockHostedEvent, host)
+  p.add(host)
   expect(p.get(host)).toBeUndefined()
   expect(p.host.name).toBe('foxhole_host')
   expect(p.host.avatarUrl).toBe("https://s3.amazonaws.com/anearassets/foxhole.png")

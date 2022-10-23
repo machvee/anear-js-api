@@ -2,7 +2,6 @@
 const { assign } = require('xstate')
 const AnearEvent = require('../lib/models/AnearEvent')
 const AnearParticipant = require('../lib/models/AnearParticipant')
-const MockMessaging = require('../lib/messaging/__mocks__/AnearMessaging')
 
 const mockParticipantEnterHandler = jest.fn()
 const mockParticipantRefreshHandler = jest.fn()
@@ -135,21 +134,19 @@ const { AnearEventFixture: chatEvent,
         AnearParticipantFixture2: chatParticipant2,
         AnearHostFixture: chatHost } = require("./fixtures")
 
-const MessagingStub = new MockMessaging()
-
 afterAll(async () => await TestEvent.close())
 
 afterEach(() => {jest.clearAllMocks()})
 
 const newTestEvent = (hosted = false) => {
-  const t = new TestEvent(chatEvent, MessagingStub)
+  const t = new TestEvent(chatEvent, TestPlayer)
   t.attributes.hosted = hosted
   t.startStateMachine()
   return t
 }
 
 const newTestEventWithDefaultXState = testEvent => {
-  const t = new TestEventWithDefaultXState(testEvent, MessagingStub)
+  const t = new TestEventWithDefaultXState(testEvent, TestPlayer)
   t.startStateMachine()
   return t
 }
@@ -270,8 +267,8 @@ test('can add participant, hosted', async () => {
   expect(t.hosted).toBe(true)
   expect(t.participants.numActive(false)).toBe(0)
 
-  const host = new TestPlayer(chatHost)
-  const p2 = new TestPlayer(chatParticipant2)
+  const host = new TestPlayer(chatHost, t)
+  const p2 = new TestPlayer(chatParticipant2, t)
   const id = t.id
 
   await t.participantEnter(host)
@@ -304,16 +301,16 @@ test('can add participant, hosted', async () => {
 
 test('can be retrieved back from storage with participants, not hosted', async () => {
   const testEvent = newTestEvent(false)
-  const p1 = new TestPlayer(chatParticipant1)
-  const p2 = new TestPlayer(chatParticipant2)
+  const p1 = new TestPlayer(chatParticipant1, testEvent)
+  const p2 = new TestPlayer(chatParticipant2, testEvent)
 
   await testEvent.participantEnter(p1)
   await testEvent.participantEnter(p2)
   await testEvent.persist()
 
-  const rehydratedTestEvent = await TestEvent.getFromStorage(testEvent.id, MessagingStub)
-  const rehydratedPlayer1 = await TestPlayer.getFromStorage(p1.id)
-  const rehydratedPlayer2 = await TestPlayer.getFromStorage(p2.id)
+  const rehydratedTestEvent = await TestEvent.getFromStorage(testEvent.id)
+  const rehydratedPlayer1 = await TestPlayer.getFromStorage(p1.id, rehydratedTestEvent)
+  const rehydratedPlayer2 = await TestPlayer.getFromStorage(p2.id, rehydratedTestEvent)
 
   rehydratedTestEvent.startStateMachine()
 
