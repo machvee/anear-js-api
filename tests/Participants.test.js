@@ -5,6 +5,7 @@ const { ParticipantsFixture: participantsJSON,
         AnearParticipantFixture2: visitor2JSON,
         AnearHostFixture: hostJSON } = require('./fixtures')
 const AnearParticipant = require('../lib/models/AnearParticipant')
+const AnearParticipantJSONBuilder = require('./utils/AnearParticipantJSONBuilder')
 
 const user1Id = "e053977c-dcb6-40e0-b7b8-e3dbd70ec8fd"
 const idleId = "f1056e6c-c393-4617-8a06-67ba9d2f4b8a"
@@ -15,44 +16,64 @@ const GeoLocation = {lat: 25.8348343, lng: -80.38438434}
 const MockHostedEvent = {hosted: true}
 const MockNonHostedEvent = {hosted: false}
 
-const newActiveParticipants = (timestamp, anearEvent = MockHostedEvent) => {
-  const activeParticipants = JSON.parse(JSON.stringify(participantsJSON))
-  const participants = new Participants()
-  const aps = Object.values(activeParticipants)
-  aps.forEach((p, i) => participants.add(anearEvent, p, timestamp - (i*2000)))
+const newActiveParticipants = (timestamp, args = []) => {
+  const copyParticipantsFixture = JSON.parse(JSON.stringify(participantsJSON))
+  const activeParticipants = Object.values(copyParticipantsFixture).filter(p => !p.isHost)
+
+  const participants = new Participants(MockHostedEvent, ...args)
+
+  activeParticipants.forEach(
+    (attrs, i) => {
+      const participant = new AnearParticipant(AnearParticipantJSONBuilder(attrs), MockHostedEvent)
+      participant.host = attrs.isHost
+      participants.add(participant, timestamp - (i*2000))
+    }
+  )
   return participants
 }
 
-const newCurrentParticipants = (timestamp, jsonArgs = {}, anearEvent = MockHostedEvent) => {
-  const currentParticipants = JSON.parse(JSON.stringify(participantsJSON))
-  const participants = new Participants(jsonArgs)
-  let withTimestamp
-  const cps = Object.values(currentParticipants)
-  cps.forEach(
-    (p,i) => {
-      if (p.state === 'active') {
+const newCurrentParticipants = (timestamp, anearEvent = MockHostedEvent) => {
+  const copyParticipantsFixture = JSON.parse(JSON.stringify(participantsJSON))
+  const currentParticipants= Object.values(copyParticipantsFixture).filter(p => !p.isHost)
+
+  const participants = new Participants(anearEvent)
+
+  const anearParticipants = currentParticipants.map(
+    (attrs, i) => {
+      const participant =  new AnearParticipant(AnearParticipantJSONBuilder(attrs), anearEvent)
+
+      let withTimestamp
+      if (attrs.state === 'active') {
         withTimestamp = timestamp - (i*2000)
       } else {
-        // idle in the last 30 minutes
         withTimestamp = timestamp - participants.idleMsecs
       }
-      participants.add(anearEvent, p, withTimestamp)
+
+      participant.state = attrs.state
+      participant.timestamp = withTimestamp
+      participant.host = attrs.isHost
+      return participant
     }
   )
+
+  participants.load(anearParticipants)
+
   return participants
 }
 
 const now = new Date().getTime()
 
 test('constructor with JSON provided', () =>  {
-  const p = new Participants({idleMsecs: 23400, purgeMsecs: 678900})
+  const idle = 23400
+  const purge = 678900
+  const p = new Participants(MockHostedEvent, idle, purge)
   expect(p).toBeDefined()
-  expect(p.idleMsecs).toBe(23400)
-  expect(p.purgeMsecs).toBe(678900)
+  expect(p.idleMsecs).toBe(idle)
+  expect(p.purgeMsecs).toBe(purge)
 })
 
 test('constructor with NO JSON provided has default idle and purge Msecs', () => {
-  const p = new Participants()
+  const p = new Participants(MockHostedEvent)
   expect(p).toBeDefined()
   expect(p.idleMsecs).toBe(1800000)
   expect(p.purgeMsecs).toBe(7200000)
@@ -60,7 +81,7 @@ test('constructor with NO JSON provided has default idle and purge Msecs', () =>
 })
 
 test('constructor with null idle and purge msecs avoids idle purge', () => {
-  const p = newActiveParticipants(now, {idleMsecs: null, purgeMsecs: null})
+  const p = newActiveParticipants(now, [null, null, []])
   expect(p.idleMsecs).toBe(null)
   expect(p.purgeMsecs).toBe(null)
   expect(p.idle).toHaveLength(0)
@@ -97,19 +118,13 @@ test('getParticipant fail', () =>  {
   expect(p.get({id: "abcd"})).toBeUndefined()
 })
 
-test('host', () =>  {
-  const p = newActiveParticipants(now)
-  const host = p.host
-  expect(host.name).toBe("the_host")
-})
-
 test('getParticipant success', () =>  {
   const p = newActiveParticipants(now)
   expect(p.get({id: user1Id}).name).toBe("user1")
 })
 
 test('add() participant user', async () => {
-  const p = newCurrentParticipants(now, {}, MockNonHostedEvent)
+  const p = newCurrentParticipants(now, MockNonHostedEvent)
   const participant = new AnearParticipant(visitor2JSON, MockNonHostedEvent)
   participant.geoLocation = GeoLocation
 
@@ -148,7 +163,7 @@ test('idle', () => {
 test('toJSON', () => {
   const p = new Participants(participantsJSON)
   const j = p.toJSON()
-  expect(j).toHaveProperty("participants")
+  expect(j).toHaveProperty("ids")
   expect(j).toHaveProperty("idleMsecs")
   expect(j).toHaveProperty("purgeMsecs")
 })

@@ -109,5 +109,5 @@ module.exports = {
     timestamp: 1615642032502,
     state: "idle",
     isHost: false
-  },
+  }
 }

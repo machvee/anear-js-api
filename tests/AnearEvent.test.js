@@ -2,6 +2,7 @@
 const { assign } = require('xstate')
 const AnearEvent = require('../lib/models/AnearEvent')
 const AnearParticipant = require('../lib/models/AnearParticipant')
+const MockMessaging = require('../lib/messaging/__mocks__/AnearMessaging')
 
 const mockParticipantEnterHandler = jest.fn()
 const mockParticipantRefreshHandler = jest.fn()
@@ -134,19 +135,21 @@ const { AnearEventFixture: chatEvent,
         AnearParticipantFixture2: chatParticipant2,
         AnearHostFixture: chatHost } = require("./fixtures")
 
+const MessagingStub = new MockMessaging()
+
 afterAll(async () => await TestEvent.close())
 
 afterEach(() => {jest.clearAllMocks()})
 
 const newTestEvent = (hosted = false) => {
-  const t = new TestEvent(chatEvent, TestPlayer)
+  const t = new TestEvent(chatEvent, TestPlayer, MessagingStub)
   t.attributes.hosted = hosted
   t.startStateMachine()
   return t
 }
 
 const newTestEventWithDefaultXState = testEvent => {
-  const t = new TestEventWithDefaultXState(testEvent, TestPlayer)
+  const t = new TestEventWithDefaultXState(testEvent, TestPlayer, MessagingStub)
   t.startStateMachine()
   return t
 }
@@ -159,7 +162,7 @@ test('participant enter with Default Xstate Config', async () => {
   expect(t.relationships.user.data.type).toBe("users")
   expect(t.anearStateMachine.currentState.value).toBe("eventActive")
   expect(t.stateMachineContext.playerScores[0]).toBe(83)
-  const p1 = new TestPlayer(chatParticipant1)
+  const p1 = new TestPlayer(chatParticipant1, t)
 
   await t.participantEnter(p1)
   await t.persist()
@@ -176,7 +179,7 @@ test('participant enter with Default Xstate Config', async () => {
 test('participant close with Default Xstate Config', async () => {
   const t = newTestEventWithDefaultXState(chatEvent)
 
-  const p1 = new TestPlayer(chatParticipant1)
+  const p1 = new TestPlayer(chatParticipant1, t)
 
   await t.participantExit(p1)
   await t.update()
@@ -190,7 +193,7 @@ test('participant close with Default Xstate Config', async () => {
 
 test('participant refresh with Default Xstate Config', async () => {
   const t = newTestEventWithDefaultXState(chatEvent)
-  const p1 = new TestPlayer(chatParticipant1)
+  const p1 = new TestPlayer(chatParticipant1, t)
 
   await t.refreshParticipant(p1)
   await t.update()
@@ -203,7 +206,7 @@ test('participant refresh with Default Xstate Config', async () => {
 
 test('participant action with Default Xstate Config', async () => {
   const t = newTestEventWithDefaultXState(chatEvent)
-  const p1 = new TestPlayer(chatParticipant1)
+  const p1 = new TestPlayer(chatParticipant1, t)
   const eventName = "TEST_ACTION"
   const payload = {x: 1, y: 99}
 
@@ -227,8 +230,8 @@ test('can be persisted and removed repeatedly in storage', async () => {
 
 test('can add participants, not hosted', async () => {
   let t = newTestEvent(false)
-  const p1 = new TestPlayer(chatParticipant1)
-  const p2 = new TestPlayer(chatParticipant2)
+  const p1 = new TestPlayer(chatParticipant1, t)
+  const p2 = new TestPlayer(chatParticipant2, t)
   const id = t.id
 
   await t.participantEnter(p1)
@@ -308,7 +311,7 @@ test('can be retrieved back from storage with participants, not hosted', async (
   await testEvent.participantEnter(p2)
   await testEvent.persist()
 
-  const rehydratedTestEvent = await TestEvent.getFromStorage(testEvent.id)
+  const rehydratedTestEvent = await TestEvent.getFromStorage(testEvent.id, TestPlayer, MessagingStub)
   const rehydratedPlayer1 = await TestPlayer.getFromStorage(p1.id, rehydratedTestEvent)
   const rehydratedPlayer2 = await TestPlayer.getFromStorage(p2.id, rehydratedTestEvent)
 
@@ -331,8 +334,8 @@ test('can be retrieved back from storage with participants, not hosted', async (
 
 test('can update state machine context via Action events', async () => {
   const t = newTestEvent(false)
-  const p1 = new TestPlayer(chatParticipant1)
-  const p2 = new TestPlayer(chatParticipant2)
+  const p1 = new TestPlayer(chatParticipant1, t)
+  const p2 = new TestPlayer(chatParticipant2, t)
 
   await t.participantEnter(p1)
   await t.participantEnter(p2)
@@ -359,8 +362,8 @@ test('can update state machine context via Action events', async () => {
 
 test('can reset All ParticipantTimers', async () => {
   const t = newTestEvent(false)
-  const p1 = new TestPlayer(chatParticipant1)
-  const p2 = new TestPlayer(chatParticipant2)
+  const p1 = new TestPlayer(chatParticipant1, t)
+  const p2 = new TestPlayer(chatParticipant2, t)
 
   const resetMock = jest.spyOn(MessagingStub, "resetAllParticipantTimers");
 
