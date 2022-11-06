@@ -13,14 +13,14 @@ const activeId = user1Id
 const hours24 = (24 * 60 * 60 * 1000)
 const GeoLocation = {lat: 25.8348343, lng: -80.38438434}
 
-const MockHostedEvent = {hosted: true}
-const MockNonHostedEvent = {hosted: false}
+const MockHostedEvent = {hosted: true, anearParticipantClass: AnearParticipant}
+const MockNonHostedEvent = {hosted: false, anearParticipantClass: AnearParticipant}
 
-const newActiveParticipants = (timestamp, args = []) => {
+const newActiveParticipants = (timestamp, args = {}) => {
   const copyParticipantsFixture = JSON.parse(JSON.stringify(participantsJSON))
   const activeParticipants = Object.values(copyParticipantsFixture).filter(p => !p.isHost)
 
-  const participants = new Participants(MockHostedEvent, ...args)
+  const participants = new Participants(MockHostedEvent, args)
 
   activeParticipants.forEach(
     (attrs, i) => {
@@ -64,12 +64,13 @@ const newCurrentParticipants = (timestamp, anearEvent = MockHostedEvent) => {
 const now = new Date().getTime()
 
 test('constructor with JSON provided', () =>  {
-  const idle = 23400
-  const purge = 678900
-  const p = new Participants(MockHostedEvent, idle, purge)
+  const ids = ['123', '345', '456']
+  const args = {idleMsecs: 23400, purgeMsecs: 678900, ids}
+  const p = new Participants(MockHostedEvent, args)
   expect(p).toBeDefined()
-  expect(p.idleMsecs).toBe(idle)
-  expect(p.purgeMsecs).toBe(purge)
+  expect(p.idleMsecs).toBe(args.idleMsecs)
+  expect(p.purgeMsecs).toBe(args.purgeMsecs)
+  expect(p.ids).toStrictEqual(ids)
 })
 
 test('constructor with NO JSON provided has default idle and purge Msecs', () => {
@@ -81,7 +82,7 @@ test('constructor with NO JSON provided has default idle and purge Msecs', () =>
 })
 
 test('constructor with null idle and purge msecs avoids idle purge', () => {
-  const p = newActiveParticipants(now, [null, null, []])
+  const p = newActiveParticipants(now, {idleMsecs: null, purgeMsecs: null})
   expect(p.idleMsecs).toBe(null)
   expect(p.purgeMsecs).toBe(null)
   expect(p.idle).toHaveLength(0)
@@ -161,11 +162,15 @@ test('idle', () => {
 })
 
 test('toJSON', () => {
-  const p = new Participants(participantsJSON)
+  const p = newActiveParticipants(now)
   const j = p.toJSON()
   expect(j).toHaveProperty("ids")
   expect(j).toHaveProperty("idleMsecs")
   expect(j).toHaveProperty("purgeMsecs")
+  expect(j.ids).toStrictEqual(p.ids)
+  expect(j.ids.length).toBe(10)
+  expect(j.idleMsecs).toBe(1800000)
+  expect(j.purgeMsecs).toBe(7200000)
 })
 
 test('isIdle', () => {
@@ -198,7 +203,7 @@ test('purge host user-type', () => {
   const p = newActiveParticipants(now)
   const c = p.host
   p.purge(c)
-  expect(p.host).toStrictEqual({})
+  expect(p.host).toStrictEqual(null)
 })
 
 test('updateState will leave state unchanged when timeout criteria not met', () => {
@@ -206,8 +211,8 @@ test('updateState will leave state unchanged when timeout criteria not met', () 
   p.updateState(now)
   expect(p.active).toHaveLength(8)
   expect(p.idle).toHaveLength(2)
-  expect(p.numActive()).toBe(8)
-  expect(p.numIdle()).toBe(2)
+  expect(p.numActive).toBe(8)
+  expect(p.numIdle).toBe(2)
 })
 
 test('updateState will mark active to idle when timeout reached', () => {
