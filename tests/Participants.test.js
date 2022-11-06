@@ -167,7 +167,7 @@ test('toJSON', () => {
   expect(j).toHaveProperty("ids")
   expect(j).toHaveProperty("idleMsecs")
   expect(j).toHaveProperty("purgeMsecs")
-  expect(j.ids).toStrictEqual(p.ids)
+  expect(j.ids.sort()).toEqual(p.ids.sort())
   expect(j.ids.length).toBe(10)
   expect(j.idleMsecs).toBe(1800000)
   expect(j.purgeMsecs).toBe(7200000)

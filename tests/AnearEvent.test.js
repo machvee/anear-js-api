@@ -343,11 +343,15 @@ test('can be retrieved back from storage with participants, not hosted', async (
   expect(rehydratedTestEvent.participantTimeout).toBe(32000)
   expect(rehydratedTestEvent.stateMachineContext.score).toBe(90)
   expect(rehydratedTestEvent.included[0].relationships.app.data.id).toBe("5b9d9838-17de-4a80-8a64-744c222ba722")
-  expect(rehydratedPlayer1.context.name).toBe('machvee')
-  expect(rehydratedPlayer2.context.name).toBe('bbondfl93')
 
-  await rehydratedTestEvent.participantExit(rehydratedPlayer1)
-  await rehydratedTestEvent.participantExit(rehydratedPlayer2)
+  const rp1 = rehydratedTestEvent.participants.getById(p1.id)
+  const rp2 = rehydratedTestEvent.participants.getById(p2.id)
+
+  expect(rehydratedTestEvent.participants.getById(rp1.id).context.name).toBe('machvee')
+  expect(rehydratedTestEvent.participants.getById(rp2.id).context.name).toBe('bbondfl93')
+
+  await rehydratedTestEvent.participantExit(rp1)
+  await rehydratedTestEvent.participantExit(rp2)
   await rehydratedTestEvent.remove()
 })
 
