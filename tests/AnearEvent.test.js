@@ -331,10 +331,12 @@ test('can be retrieved back from storage with participants, not hosted', async (
   await testEvent.participantEnter(p2)
   await testEvent.persist()
 
-  const rehydratedTestEvent = await TestEvent.getFromStorage(testEvent.id, TestPlayer, MessagingStub)
-  await rehydratedTestEvent.reloadParticipantsFromStorage()
+  const rehydratedTestEvent = await TestEvent.getFromStorage(testEvent.id, MessagingStub)
 
   rehydratedTestEvent.startStateMachine()
+
+  await rehydratedTestEvent.participantEnter(p1)
+  await rehydratedTestEvent.participantEnter(p2)
 
   expect(rehydratedTestEvent.participants.numActive).toBe(2)
   expect(rehydratedTestEvent.id).toBe(testEvent.id)
@@ -380,25 +382,5 @@ test('can update state machine context via Action events', async () => {
   await t.participantExit(p1)
   await t.participantExit(p2)
   await t.closeOutParticipants()
-  await t.remove()
-})
-
-test('can reset All ParticipantTimers', async () => {
-  const t = newTestEvent(false)
-  const p1 = new TestPlayer(chatParticipant1, t)
-  const p2 = new TestPlayer(chatParticipant2, t)
-
-  const resetMock = jest.spyOn(MessagingStub, "resetAllParticipantTimers");
-
-  await t.participantEnter(p1)
-  await t.participantEnter(p2)
-  await t.persist()
-
-  t.cancelParticipantTimers()
-
-  expect(resetMock).toHaveBeenCalledTimes(1)
-
-  await t.participantExit(p1)
-  await t.participantExit(p2)
   await t.remove()
 })
