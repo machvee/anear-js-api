@@ -37,6 +37,9 @@ const TicTacToeMachineConfig = anearEvent => ({
     },
     gameStart: {
       on: {
+        TEST_ACTION: {
+          actions: 'testActionHandler'
+        },
         BULLSEYE: {
           actions: 'actionHandler'
         },
@@ -63,6 +66,13 @@ const TicTacToeMachineOptions = anearEvent => ({
       anearEvent.myParticipantExitHandler(event.participant)
     },
     actionHandler: assign({score: (context, event) => context.score + event.payload.points}),
+    testActionHandler: (context, event) => {
+      anearEvent.myParticipantActionHandler(
+        event.participant.id,
+        event.type,
+        event.payload
+      )
+    }
   }
 })
 
@@ -90,36 +100,11 @@ class TestEvent extends AnearEvent {
   async myParticipantRefreshHandler(...args) {
     return mockParticipantRefreshHandler(...args)
   }
-}
-
-
-class TestEventWithDefaultXState extends AnearEvent {
-  initContext() {
-    return {
-      playerScores: [83, 22]
-    }
-  }
-
-  participantEnterEventCallback(participant) {
-    mockParticipantEnterHandler(participant)
-    return Promise.resolve()
-  }
-
-  participantRefreshEventCallback(participant) {
-    mockParticipantRefreshHandler(participant)
-    return Promise.resolve()
-  }
-
-  participantExitEventCallback(participant) {
-    mockParticipantExitHandler(participant)
-    return Promise.resolve()
-  }
-
-  participantActionEventCallback(participant, actionEventName, payload) {
-    mockParticipantActionHandler(participant, actionEventName, payload)
-    return Promise.resolve()
+  async myParticipantActionHandler(...args) {
+    return mockParticipantActionHandler(...args)
   }
 }
+
 
 class TestPlayer extends AnearParticipant {
   initContext() {
@@ -148,23 +133,18 @@ const newTestEvent = (hosted = false) => {
   return t
 }
 
-const newTestEventWithDefaultXState = testEvent => {
-  const t = new TestEventWithDefaultXState(testEvent, TestPlayer, MessagingStub)
-  t.startStateMachine()
-  return t
-}
-
-test('participant enter with Default Xstate Config', async () => {
-  const t = newTestEventWithDefaultXState(chatEvent)
+test('participant enter', async () => {
+  const t = newTestEvent()
 
   const id = t.id
   expect(t.id).toBe(chatEvent.data.id)
   expect(t.relationships.user.data.type).toBe("users")
-  expect(t.anearStateMachine.currentState.value).toBe("eventActive")
-  expect(t.stateMachineContext.playerScores[0]).toBe(83)
+  expect(t.anearStateMachine.currentState.value).toBe("waitingForHost")
+  expect(t.stateMachineContext.score).toBe(90)
   const p1 = new TestPlayer(chatParticipant1, t)
 
   await t.participantEnter(p1)
+  expect(t.anearStateMachine.currentState.value).toBe("waitingForOpponent")
   await t.persist()
   await t.remove()
 
@@ -176,10 +156,11 @@ test('participant enter with Default Xstate Config', async () => {
   await p1.remove()
 })
 
-test('participant close with Default Xstate Config', async () => {
-  const t = newTestEventWithDefaultXState(chatEvent)
+test('participant close', async () => {
+  const t = newTestEvent()
 
   const p1 = new TestPlayer(chatParticipant1, t)
+  await t.participantEnter(p1)
 
   await t.participantExit(p1)
   await t.update()
@@ -191,29 +172,20 @@ test('participant close with Default Xstate Config', async () => {
   await t.remove()
 })
 
-test('participant refresh with Default Xstate Config', async () => {
-  const t = newTestEventWithDefaultXState(chatEvent)
+test('participant action', async () => {
+  const t = newTestEvent()
   const p1 = new TestPlayer(chatParticipant1, t)
+  const p2 = new TestPlayer(chatParticipant2, t)
+  await t.participantEnter(p1)
+  await t.participantEnter(p2)
 
-  await t.refreshParticipant(p1)
-  await t.update()
-
-  expect(mockParticipantRefreshHandler).toHaveBeenCalledWith(p1)
-  expect(mockParticipantRefreshHandler).toHaveBeenCalledTimes(1)
-  await p1.remove()
-  await t.remove()
-})
-
-test('participant action with Default Xstate Config', async () => {
-  const t = newTestEventWithDefaultXState(chatEvent)
-  const p1 = new TestPlayer(chatParticipant1, t)
   const eventName = "TEST_ACTION"
   const payload = {x: 1, y: 99}
 
   await t.participantAction(p1, eventName, payload)
   await t.update()
 
-  expect(mockParticipantActionHandler).toHaveBeenCalledWith(p1, eventName, payload)
+  expect(mockParticipantActionHandler).toHaveBeenCalledWith(p1.id, eventName, payload)
   expect(mockParticipantActionHandler).toHaveBeenCalledTimes(1)
   await p1.remove()
   await t.remove()
