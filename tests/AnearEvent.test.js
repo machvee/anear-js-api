@@ -5,6 +5,7 @@ const AnearParticipant = require('../lib/models/AnearParticipant')
 const MockMessaging = require('../lib/messaging/__mocks__/AnearMessaging')
 
 const mockParticipantEnterHandler = jest.fn()
+const mockSpectatorViewHandler = jest.fn()
 const mockParticipantRefreshHandler = jest.fn()
 const mockParticipantExitHandler = jest.fn()
 const mockParticipantActionHandler = jest.fn()
@@ -15,15 +16,19 @@ const TicTacToeMachineConfig = anearEvent => ({
   states: {
     waitingForHost: {
       on: {
-        JOIN: {
+        PARTICIPANT_JOIN: {
           actions: 'enterHandler',
           target: 'waitingForOpponent'
+        },
+        SPECTATOR_VIEW: {
+          actions: 'viewHandler',
+          target: 'waitingForHost'
         }
       }
     },
     waitingForOpponent: {
       on: {
-        JOIN: {
+        PARTICIPANT_JOIN: {
           actions: 'enterHandler',
           target: 'gameStart'
         },
@@ -62,6 +67,9 @@ const TicTacToeMachineOptions = anearEvent => ({
     refreshHandler: (context, event) => {
       anearEvent.myParticipantRefreshHandler(event.participant)
     },
+    viewHandler: (context, event) => {
+      anearEvent.mySpectatorViewHandler(event.userId)
+    },
     participantExitHandler: (context, event) => {
       anearEvent.myParticipantExitHandler(event.participant)
     },
@@ -91,6 +99,9 @@ class TestEvent extends AnearEvent {
     return TicTacToeMachineOptions(this)
   }
 
+  async mySpectatorViewHandler(...args) {
+    return mockSpectatorViewHandler(...args)
+  }
   async myParticipantEnterHandler(...args) {
     return mockParticipantEnterHandler(...args)
   }
@@ -155,6 +166,20 @@ test('participant enter', async () => {
 
   await p1.remove()
 })
+
+test('spectator viewer', async () => {
+  const t = newTestEvent()
+  const userId = 999837834
+
+  const id = t.id
+  expect(t.anearStateMachine.currentState.value).toBe("waitingForHost")
+  await t.spectatorView(userId)
+  expect(t.anearStateMachine.currentState.value).toBe("waitingForHost")
+
+  expect(mockSpectatorViewHandler).toHaveBeenCalledTimes(1)
+  expect(mockSpectatorViewHandler).toHaveBeenCalledWith(userId)
+})
+
 
 test('participant close', async () => {
   const t = newTestEvent()
