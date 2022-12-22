@@ -276,6 +276,7 @@ test('purge all participants', async () => {
   await t.purgeParticipants()
 
   expect(t.participants.all).toHaveLength(0)
+  expect(t.participants.host).toBe(null)
 
   await t.remove()
 })
