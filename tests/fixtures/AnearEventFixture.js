@@ -36,7 +36,7 @@ module.exports = {
          type: 'users'
        }
      },
-     'cloned-event': {
+     'cloned-from': {
        data: null
      },
    },
