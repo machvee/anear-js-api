@@ -4,79 +4,80 @@ const { AnearParticipantFixture1: player1 } =  require('./fixtures')
 
 const MockEvent = {}
 
-class TestParticipant extends AnearParticipant {
-  initContext() {
-    return {score: 97, responses: ['A', 'C', 'D', 'A']}
-  }
-}
-
-afterAll(async () => await TestParticipant.close())
+afterAll(async () => await AnearParticipant.close())
 
 test('constructor', () =>  {
-  const t = new TestParticipant(player1, MockEvent)
+  const t = new AnearParticipant(player1, MockEvent)
   expect(t.id).toBe(player1.data.id)
   expect(t.relationships.user.data.type).toBe("users")
-  expect(t.context.score).toBe(97)
   expect(t.anearEvent).toBe(MockEvent)
 })
 
 test('participant can be repeatedly rehydrated and updated', async () => {
-  try {
-    const participant = new TestParticipant(player1, MockEvent)
-    await participant.persist()
+  const participant = new AnearParticipant(player1, MockEvent)
+  await participant.persist()
 
-    let p = await TestParticipant.getFromStorage(player1.data.id, MockEvent)
+  let p = await AnearParticipant.getFromStorage(player1.data.id, MockEvent)
 
-    expect(p.context.responses).toStrictEqual(['A', 'C', 'D', 'A'])
-    expect(p.anearEvent).toBe(MockEvent)
-    p.context.responses.push('B')
+  expect(p.anearEvent).toBe(MockEvent)
 
-    await p.update()
+  await p.update()
 
-    p = await TestParticipant.getFromStorage(player1.data.id, MockEvent)
-    expect(p.context.responses[4]).toBe('B')
-    expect(p.anearEvent).toBe(MockEvent)
+  p = await AnearParticipant.getFromStorage(player1.data.id, MockEvent)
+  expect(p.anearEvent).toBe(MockEvent)
 
-    await p.remove()
-
-  } catch(error) {
-    console.error(error)
-  }
+  await p.remove()
 })
 
-test('participant does not persist geoLocation', async () => {
-  try {
-    const someGeoLocation = {
-      coords: {
-        latitude: 25.7862067,
-        longitude: -80.1415718
-      }
-    }
-    const participant = new TestParticipant(player1, MockEvent)
+test('userId', () => {
+  const p = new AnearParticipant(player1, MockEvent)
+  expect(p.userId).toBe('2d08adc7-b1af-4607-2a86-b45faa03eaa7')
+})
 
-    participant.geoLocation = someGeoLocation
+test('userType', () => {
+  const p = new AnearParticipant(player1, MockEvent)
+  expect(p.userType).toBe('participant')
+})
 
-    await participant.persist()
+test('isHost false', () => {
+  const p = new AnearParticipant(player1, MockEvent)
+  expect(p.isHost()).toBe(false)
+})
 
-    expect(participant.geoLocation.coords.latitude).toBe(someGeoLocation.coords.latitude)
+test('isHost true', () => {
+  const p = new AnearParticipant(player1, MockEvent)
+  p.data.attributes['user-type'] = 'host'
+  expect(p.isHost()).toBe(true)
+})
 
-    let p = await TestParticipant.getFromStorage(player1.data.id, MockEvent)
+test('eventId', () => {
+  const p = new AnearParticipant(player1, MockEvent)
+  expect(p.eventId).toBe('b2aa5a28-2aa1-4ba7-8e2f-fe11dfe1b971')
+})
 
-    expect(p.geoLocation).toBe(null)
+test('user', () => {
+  const p = new AnearParticipant(player1, MockEvent)
+  expect(p.user.id).toBe('2d08adc7-b1af-4607-2a86-b45faa03eaa7')
+  expect(p.user.attributes.name).toBe('dave_mcvicar')
+})
 
-    expect(p.context.responses).toStrictEqual(['A', 'C', 'D', 'A'])
-    expect(p.anearEvent).toBe(MockEvent)
-    p.context.responses.push('B')
+test('profile', () => {
+  const p = new AnearParticipant(player1, MockEvent)
+  expect(p.profile.id).toBe('a04976a9-1c08-4bc6-b381-7f0d0637b919')
+  expect(p.profile.attributes['last-name']).toBe('McVicar')
+})
 
-    await p.update()
+test('name', () => {
+  const p = new AnearParticipant(player1, MockEvent)
+  expect(p.name).toBe('machvee')
+})
 
-    p = await TestParticipant.getFromStorage(player1.data.id, MockEvent)
-    expect(p.context.responses[4]).toBe('B')
-    expect(p.anearEvent).toBe(MockEvent)
+test('avatarUrl', () => {
+  const p = new AnearParticipant(player1, MockEvent)
+  expect(p.avatarUrl).toBe('https://s3.amazonaws.com/anearassets/anon_user.png')
+})
 
-    await p.remove()
-
-  } catch(error) {
-    console.error(error)
-  }
+test('privateChannelName', () => {
+  const p = new AnearParticipant(player1, MockEvent)
+  expect(p.privateChannelName).toBe('anear:a:6i4GPGg7YiE81jxE65vpov:e:51nriTFWJYwiZRVfhaTmOM:private:4aih3BnWiRXLHKupFFkKHO')
 })

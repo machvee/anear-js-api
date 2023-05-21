@@ -38,6 +38,16 @@ test('eventState', () => {
   expect(t.eventState).toBe('announce')
 })
 
+test('hosted false', () => {
+  const t = newAnearEvent(false)
+  expect(t.hosted).toBe(false)
+})
+
+test('hosted true', () => {
+  const t = newAnearEvent(true)
+  expect(t.hosted).toBe(true)
+})
+
 test('participantTimeout', () => {
   const t = newAnearEvent()
   expect(t.participantTimeout).toBe(32000)
