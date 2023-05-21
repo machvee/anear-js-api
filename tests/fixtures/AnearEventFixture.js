@@ -18,7 +18,7 @@ module.exports = {
       hosted: false,
       altitude: '10',
       state: 'announce',
-      flags: [],
+      flags: ['no_spectators'],
       'spectators-channel-name': 'anear:z:mQesUKL2ROyfuDWWkUVZB:e:zKie83NNGfTy110eeEQy4:spectators',
       'event-channel-name': 'anear:z:mQesUKL2ROyfuDWWkUVZB:e:zKie83NNGfTy110eeEQy4:event',
       'participants-channel-name': 'anear:z:mQesUKL2ROyfuDWWkUVZB:e:zKie83NNGfTy110eeEQy4:participants',
