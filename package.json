@@ -18,12 +18,18 @@
   "homepage": "https://github.com/machvee/anear-js-api#readme",
   "dependencies": {
     "ably": "^1.2.34",
+    "archiver": "^6.0.1",
     "async-mutex": "^0.3.2",
     "async-redis": "^2.0.0",
+    "clean-css": "^5.3.3",
     "cross-fetch": "^3.1.5",
+    "less": "^4.2.0",
+    "less-plugin-clean-css": "^1.5.1",
+    "parcel": "^2.11.0",
     "pug": "^3.0.2",
     "qs": "^6.10.3",
     "simple-node-logger": "^21.8.12",
+    "tmp": "^0.2.1",
     "xstate": "^4.32.1"
   },
   "devDependencies": {
