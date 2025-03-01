@@ -3,7 +3,7 @@
 const logger = require('../../lib/utils/Logger')
 
 class RealtimeMessaging {
-  initRealtime(appMachine) {
+  initRealtime(appId, appMachine) {
     return this
   }
 
@@ -12,4 +12,6 @@ class RealtimeMessaging {
   }
 }
 
-module.exports = RealtimeMessaging
+const realtimeMessagingInstance = new RealtimeMessaging()
+
+module.exports = realtimeMessagingInstance

@@ -25,4 +25,6 @@ class AnearApi {
   }
 }
 
-module.exports = AnearApi
+const anearApiInstance = new AnearApi()
+
+module.exports = anearApiInstance
