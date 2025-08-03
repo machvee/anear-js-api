@@ -1,3 +1,6 @@
+jest.mock('../lib/api/AnearApi')
+jest.mock('../lib/utils/RealtimeMessaging')
+
 const AnearService = require('../lib/AnearService')
 const logger = require('../lib/utils/Logger')
 
