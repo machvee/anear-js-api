@@ -1,100 +1,125 @@
 "use strict"
+
 const AnearEvent = require('../lib/models/AnearEvent')
-const AnearParticipant = require('../lib/models/AnearParticipant')
-
-const { AnearEventFixture: chatEvent } = require('./fixtures')
-
-afterAll(async () => await AnearEvent.close())
-
-afterEach(() => {jest.clearAllMocks()})
+const { AnearEventFixture } = require('./fixtures')
 
 const newAnearEvent = (hosted = false) => {
-  const e = new AnearEvent(chatEvent)
-  e.attributes.hosted = hosted
-  return e
+  const event = new AnearEvent(AnearEventFixture)
+  event.attributes.hosted = hosted
+  return event
 }
 
-test('can be persisted and removed repeatedly in storage', async () => {
-  const e = newAnearEvent()
-  await e.persist()
-  await e.remove()
-  const again = newAnearEvent()
-  await again.persist()
-  await again.remove()
-})
+describe('AnearEvent', () => {
+  let anearEvent
 
-test('zone', () => {
-  const e = newAnearEvent()
-  expect(e.zone.id).toBe('08dbf4ce-18b2-4d5a-a7d1-0c090b16251d')
-})
+  beforeEach(() => {
+    anearEvent = newAnearEvent()
+  })
 
-test('app', () => {
-  const e = newAnearEvent()
-  expect(e.app.id).toBe('5b9d9838-17de-4a80-8a64-744c222ba722')
-})
+  test('constructor', () => {
+    expect(anearEvent.zone.id).toBe('08dbf4ce-18b2-4d5a-a7d1-0c090b16251d')
+    expect(anearEvent.app.id).toBe('5b9d9838-17de-4a80-8a64-744c222ba722')
+    expect(anearEvent.userId).toBe('2d08adc7-b1af-4607-2a86-b45faa03eaa7')
+    expect(anearEvent.zoneId).toBe('08dbf4ce-18b2-4d5a-a7d1-0c090b16251d')
+    expect(anearEvent.eventState).toBe('announce')
+    expect(anearEvent.hosted).toBe(false)
+  })
 
-test('userId', () => {
-  const e = newAnearEvent()
-  expect(e.userId).toBe('2d08adc7-b1af-4607-2a86-b45faa03eaa7')
-})
+  test('setMachine registers a send function', () => {
+    const mockService = { send: jest.fn() }
+    anearEvent.setMachine(mockService)
+    anearEvent.announceEvent()
+    expect(mockService.send).toHaveBeenCalledWith('ANNOUNCE')
+  })
 
-test('zoneId', () => {
-  const e = newAnearEvent()
-  expect(e.zoneId).toBe('08dbf4ce-18b2-4d5a-a7d1-0c090b16251d')
-})
+  test('can be hosted', () => {
+    const hostedEvent = newAnearEvent(true)
+    expect(hostedEvent.hosted).toBe(true)
+  })
 
-test('eventState', () => {
-  const e = newAnearEvent()
-  expect(e.eventState).toBe('announce')
-})
+  test('participantTimeout', () => {
+    expect(anearEvent.participantTimeout).toBe(32000)
+  })
 
-test('hosted false', () => {
-  const e = newAnearEvent(false)
-  expect(e.hosted).toBe(false)
-})
+  test('hasFlag returns correct values', () => {
+    expect(anearEvent.hasFlag('foo')).toBe(false)
+    expect(anearEvent.hasFlag('no_spectators')).toBe(true)
+  })
 
-test('hosted true', () => {
-  const e = newAnearEvent(true)
-  expect(e.hosted).toBe(true)
-})
+  test('allowsSpectators is false when no_spectators flag is present', () => {
+    expect(anearEvent.allowsSpectators()).toBe(false)
+  })
 
-test('participantTimeout', () => {
-  const e = newAnearEvent()
-  expect(e.participantTimeout).toBe(32000)
-})
+  test('isPlayable returns true for playable states', () => {
+    anearEvent.attributes.state = 'announce'
+    expect(anearEvent.isPlayable()).toBe(true)
+    anearEvent.attributes.state = 'live'
+    expect(anearEvent.isPlayable()).toBe(true)
+  })
 
-test('hasFlag()', () => {
-  const e = newAnearEvent()
-  expect(e.hasFlag('foo')).toBe(false)
-  expect(e.hasFlag('no_spectators')).toBe(true)
-})
+  test('isPlayable returns false for unplayable states', () => {
+    anearEvent.attributes.state = 'closing'
+    expect(anearEvent.isPlayable()).toBe(false)
+    anearEvent.attributes.state = 'closed'
+    expect(anearEvent.isPlayable()).toBe(false)
+    anearEvent.attributes.state = 'canceled'
+    expect(anearEvent.isPlayable()).toBe(false)
+  })
 
-test('allowsSpectators()', () => {
-  const e = newAnearEvent()
-  expect(e.allowsSpectators()).toBe(false)
-})
+  describe('channel name getters', () => {
+    test('eventChannelName', () => {
+      expect(anearEvent.eventChannelName).toBe('anear:z:mQesUKL2ROyfuDWWkUVZB:e:zKie83NNGfTy110eeEQy4:event')
+    })
 
-test('isPlayable()', () => {
-  const e = newAnearEvent()
-  expect(e.isPlayable()).toBe(true)
-})
+    test('participantsChannelName', () => {
+      expect(anearEvent.participantsChannelName).toBe('anear:z:mQesUKL2ROyfuDWWkUVZB:e:zKie83NNGfTy110eeEQy4:participants')
+    })
 
-test('eventChannelName()', () => {
-  const e = newAnearEvent()
-  expect(e.eventChannelName()).toBe('anear:z:mQesUKL2ROyfuDWWkUVZB:e:zKie83NNGfTy110eeEQy4:event')
-})
+    test('actionsChannelName', () => {
+      expect(anearEvent.actionsChannelName).toBe('anear:z:mQesUKL2ROyfuDWWkUVZB:e:zKie83NNGfTy110eeEQy4:actions')
+    })
 
-test('participantsChannelName()', () => {
-  const e = newAnearEvent()
-  expect(e.participantsChannelName()).toBe('anear:z:mQesUKL2ROyfuDWWkUVZB:e:zKie83NNGfTy110eeEQy4:participants')
-})
+    test('spectatorsChannelName', () => {
+      expect(anearEvent.spectatorsChannelName).toBe('anear:z:mQesUKL2ROyfuDWWkUVZB:e:zKie83NNGfTy110eeEQy4:spectators')
+    })
+  })
 
-test('actionsChannelName()', () => {
-  const e = newAnearEvent()
-  expect(e.actionsChannelName()).toBe('anear:z:mQesUKL2ROyfuDWWkUVZB:e:zKie83NNGfTy110eeEQy4:actions')
-})
+  describe('state machine interactions', () => {
+    const mockService = { send: jest.fn() }
 
-test('spectatorsChannelName()', () => {
-  const e = newAnearEvent()
-  expect(e.spectatorsChannelName()).toBe('anear:z:mQesUKL2ROyfuDWWkUVZB:e:zKie83NNGfTy110eeEQy4:spectators')
+    beforeEach(() => {
+      anearEvent.setMachine(mockService)
+      mockService.send.mockClear()
+    })
+
+    test('announceEvent sends ANNOUNCE', () => {
+      anearEvent.announceEvent()
+      expect(mockService.send).toHaveBeenCalledWith('ANNOUNCE')
+    })
+
+    test('startEvent sends START', () => {
+      anearEvent.startEvent()
+      expect(mockService.send).toHaveBeenCalledWith('START')
+    })
+
+    test('cancelEvent sends CANCEL', () => {
+      anearEvent.cancelEvent()
+      expect(mockService.send).toHaveBeenCalledWith('CANCEL')
+    })
+
+    test('closeEvent sends CLOSE', () => {
+      anearEvent.closeEvent()
+      expect(mockService.send).toHaveBeenCalledWith('CLOSE')
+    })
+
+    test('pauseEvent sends PAUSE', () => {
+      anearEvent.pauseEvent()
+      expect(mockService.send).toHaveBeenCalledWith('PAUSE')
+    })
+
+    test('resumeEvent sends RESUME', () => {
+      anearEvent.resumeEvent()
+      expect(mockService.send).toHaveBeenCalledWith('RESUME')
+    })
+  })
 })

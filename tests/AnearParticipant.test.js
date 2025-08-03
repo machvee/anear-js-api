@@ -1,83 +1,79 @@
 const AnearParticipant = require('../lib/models/AnearParticipant')
+const { AnearParticipantFixture1: player1 } = require('./fixtures')
 
-const { AnearParticipantFixture1: player1 } =  require('./fixtures')
+describe('AnearParticipant', () => {
+  let participant
 
-const MockEvent = {}
+  beforeEach(() => {
+    participant = new AnearParticipant(player1)
+  })
 
-afterAll(async () => await AnearParticipant.close())
+  test('constructor', () => {
+    expect(participant.id).toBe(player1.data.id)
+    expect(participant.relationships.user.data.type).toBe('users')
+  })
 
-test('constructor', () =>  {
-  const t = new AnearParticipant(player1, MockEvent)
-  expect(t.id).toBe(player1.data.id)
-  expect(t.relationships.user.data.type).toBe("users")
-  expect(t.anearEvent).toBe(MockEvent)
-})
+  test('setMachine registers a send function', () => {
+    const mockService = { send: jest.fn() }
+    participant.setMachine(mockService)
+    participant.send('SOME_EVENT')
+    expect(mockService.send).toHaveBeenCalledWith('SOME_EVENT')
+  })
 
-test('participant can be repeatedly rehydrated and updated', async () => {
-  const participant = new AnearParticipant(player1, MockEvent)
-  await participant.persist()
+  test('participantInfo returns a subset of attributes', () => {
+    const info = participant.participantInfo
+    expect(info.id).toBe(participant.id)
+    expect(info.name).toBe('machvee')
+    expect(info.avatarUrl).toBe('https://s3.amazonaws.com/anearassets/anon_user.png')
+    expect(info.type).toBe('participant')
+  })
 
-  let p = await AnearParticipant.getFromStorage(player1.data.id, MockEvent)
+  test('geoLocation can be set and get', () => {
+    const location = { latitude: 45.5, longitude: -73.6 }
+    participant.geoLocation = location
+    expect(participant.geoLocation).toEqual(location)
+  })
 
-  expect(p.anearEvent).toBe(MockEvent)
+  test('userId returns the correct user ID', () => {
+    expect(participant.userId).toBe('2d08adc7-b1af-4607-2a86-b45faa03eaa7')
+  })
 
-  await p.update()
+  test('userType returns the correct user type', () => {
+    expect(participant.userType).toBe('participant')
+  })
 
-  p = await AnearParticipant.getFromStorage(player1.data.id, MockEvent)
-  expect(p.anearEvent).toBe(MockEvent)
+  test('isHost returns false for participants', () => {
+    expect(participant.isHost()).toBe(false)
+  })
 
-  await p.remove()
-})
+  test('isHost returns true for hosts', () => {
+    participant.attributes['user-type'] = 'host'
+    expect(participant.isHost()).toBe(true)
+  })
 
-test('userId', () => {
-  const p = new AnearParticipant(player1, MockEvent)
-  expect(p.userId).toBe('2d08adc7-b1af-4607-2a86-b45faa03eaa7')
-})
+  test('eventId returns the correct event ID', () => {
+    expect(participant.eventId).toBe('b2aa5a28-2aa1-4ba7-8e2f-fe11dfe1b971')
+  })
 
-test('userType', () => {
-  const p = new AnearParticipant(player1, MockEvent)
-  expect(p.userType).toBe('participant')
-})
+  test('user getter returns the included user resource', () => {
+    expect(participant.user.id).toBe('2d08adc7-b1af-4607-2a86-b45faa03eaa7')
+    expect(participant.user.attributes.name).toBe('dave_mcvicar')
+  })
 
-test('isHost false', () => {
-  const p = new AnearParticipant(player1, MockEvent)
-  expect(p.isHost()).toBe(false)
-})
+  test('profile getter returns the included profile resource', () => {
+    expect(participant.profile.id).toBe('a04976a9-1c08-4bc6-b381-7f0d0637b919')
+    expect(participant.profile.attributes['last-name']).toBe('McVicar')
+  })
 
-test('isHost true', () => {
-  const p = new AnearParticipant(player1, MockEvent)
-  p.data.attributes['user-type'] = 'host'
-  expect(p.isHost()).toBe(true)
-})
+  test('name getter returns the correct name', () => {
+    expect(participant.name).toBe('machvee')
+  })
 
-test('eventId', () => {
-  const p = new AnearParticipant(player1, MockEvent)
-  expect(p.eventId).toBe('b2aa5a28-2aa1-4ba7-8e2f-fe11dfe1b971')
-})
+  test('avatarUrl getter returns the correct URL', () => {
+    expect(participant.avatarUrl).toBe('https://s3.amazonaws.com/anearassets/anon_user.png')
+  })
 
-test('user', () => {
-  const p = new AnearParticipant(player1, MockEvent)
-  expect(p.user.id).toBe('2d08adc7-b1af-4607-2a86-b45faa03eaa7')
-  expect(p.user.attributes.name).toBe('dave_mcvicar')
-})
-
-test('profile', () => {
-  const p = new AnearParticipant(player1, MockEvent)
-  expect(p.profile.id).toBe('a04976a9-1c08-4bc6-b381-7f0d0637b919')
-  expect(p.profile.attributes['last-name']).toBe('McVicar')
-})
-
-test('name', () => {
-  const p = new AnearParticipant(player1, MockEvent)
-  expect(p.name).toBe('machvee')
-})
-
-test('avatarUrl', () => {
-  const p = new AnearParticipant(player1, MockEvent)
-  expect(p.avatarUrl).toBe('https://s3.amazonaws.com/anearassets/anon_user.png')
-})
-
-test('privateChannelName', () => {
-  const p = new AnearParticipant(player1, MockEvent)
-  expect(p.privateChannelName).toBe('anear:a:6i4GPGg7YiE81jxE65vpov:e:51nriTFWJYwiZRVfhaTmOM:private:4aih3BnWiRXLHKupFFkKHO')
+  test('privateChannelName returns the correct channel name', () => {
+    expect(participant.privateChannelName).toBe('anear:a:6i4GPGg7YiE81jxE65vpov:e:51nriTFWJYwiZRVfhaTmOM:private:4aih3BnWiRXLHKupFFkKHO')
+  })
 })

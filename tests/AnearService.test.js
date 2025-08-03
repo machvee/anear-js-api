@@ -7,5 +7,7 @@ const MockAppClass = class AppMachine {}
 const MockParticipantClass = class ParticipantMachine {}
 
 test('test happy path', () =>  {
-  const service = new AnearService(AppId, MockAppClass, MockParticipantClass)
+  const mockEventMachineFactory = (anearEvent) => new MockAppClass(anearEvent)
+  const mockParticipantMachineFactory = (anearParticipant) => new MockParticipantClass(anearParticipant)
+  AnearService(mockEventMachineFactory, mockParticipantMachineFactory)
 })
