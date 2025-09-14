@@ -18,15 +18,15 @@ const Config = {
       states: {
         registration: {
           meta: {
-            participants: 'ViewableGameBoard',
+            allParticipants: 'ViewableGameBoard',
             spectators: 'ViewableGameBoard'
           }
         },
         gameInProgress: {
           meta: {
-            participant: { 
-              view: 'PlayableGameBoard', 
-              timeout: calcParticipantTimeout 
+            eachParticipant: {
+              view: 'PlayableGameBoard',
+              timeout: calcParticipantTimeout
             },
             spectators: 'ViewableGameBoard'
           }
@@ -51,26 +51,26 @@ const actions = {
   renderGameOver: (context, event) => {
     anearEvent.render(
       'GameOver',           // viewPath
-      'participants',       // displayType
+      'allParticipants',       // displayType
       context,              // appContext (AppM's context)
       event,                // event that triggered this render
       null,                 // timeout (null for no timeout)
       { winner: context.winningPlayerId } // additional props
     )
   },
-  
+
   // Render with timeout for participant displays
   renderWithTimeout: (context, event) => {
     anearEvent.render(
       'WaitingForMove',
-      'participant',
+      'eachParticipant',
       context,
       event,
       (appContext, participantId) => 30000, // 30 second timeout
       { currentPlayer: context.currentPlayerToken }
     )
   },
-  
+
   // Render for spectators
   renderForSpectators: (context, event) => {
     anearEvent.render(
@@ -95,11 +95,11 @@ const actions = {
       // Render winner display
       anearEvent.render(
         'WinnerDisplay',
-        'participants',
+        'allParticipants',
         context,
         event,
         null,
-        { 
+        {
           winner: context.winner,
           finalScore: context.score,
           gameDuration: context.gameDuration
@@ -109,14 +109,14 @@ const actions = {
       // Render tie display
       anearEvent.render(
         'TieDisplay',
-        'participants',
+        'allParticipants',
         context,
         event,
         null,
         { finalScore: context.score }
       )
     }
-    
+
     // Now close the event
     anearEvent.closeEvent()
   }
@@ -128,10 +128,10 @@ const actions = {
 ### `anearEvent.render(viewPath, displayType, appContext, event, timeout, props)`
 
 - **`viewPath`** (string): Template/view path to render (e.g., 'GameBoard', 'GameOver')
-- **`displayType`** (string): One of 'participants', 'participant', or 'spectators'
+- **`displayType`** (string): One of 'allParticipants', 'eachParticipant', or 'spectators'
 - **`appContext`** (Object): The AppM's context object (available in scope)
 - **`event`** (Object): The event that triggered this render (available in scope)
-- **`timeout`** (Function|number|null): 
+- **`timeout`** (Function|number|null):
   - `null`: No timeout
   - `number`: Fixed timeout in milliseconds
   - `Function`: Dynamic timeout function `(appContext, participantId) => msecs`
