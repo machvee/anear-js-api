@@ -26,7 +26,11 @@ const Config = {
           meta: {
             eachParticipant: {
               view: 'PlayableGameBoard',
-              timeout: calcParticipantTimeout
+              timeout: calcParticipantTimeout,
+              props: {
+                title: "Your Move!",
+                highlightLastMove: true
+              }
             },
             spectators: 'ViewableGameBoard'
           }
@@ -135,7 +139,7 @@ const actions = {
   - `null`: No timeout
   - `number`: Fixed timeout in milliseconds
   - `Function`: Dynamic timeout function `(appContext, participantId) => msecs`
-- **`props`** (Object): Additional properties merged into meta (optional)
+- **`props`** (Object): Additional properties made available at the root of the pug template's render context (optional)
 
 ## When to Use Each Approach
 

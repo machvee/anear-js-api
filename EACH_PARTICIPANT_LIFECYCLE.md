@@ -43,6 +43,10 @@ confirmMove: {
       return [{
         participantId: movingParticipantId,
         view: 'participant/MoveConfirmation', // A view confirming their move was received
+        props: {
+          message: 'Your move has been recorded. Waiting for opponent...',
+          move: event.moveData
+        },
         timeout: 2000 // A short timeout for the confirmation display
       }];
     }
@@ -137,94 +141,4 @@ services: {
 The `DisplayEventProcessor` loops through each `displayEvent` and, based on the target, decides what to do.
 
 *   **File:** `/Users/machvee/dev/anear-js-api/lib/utils/DisplayEventProcessor.js`
-*   **Description:** For an `eachParticipant` target, it doesn't publish to a public channel. Instead, it performs a critical handoff: it finds the specific participant's own state machine (`AnearParticipantMachine`) and sends a *private* `RENDER_DISPLAY` event directly to that machine. This is the key to sending a message to only one person.
-*   **Code Reference (lines 142-156 and 229-256):**
-
-```javascript
-// ... inside DisplayEventProcessor.js _processSingle
-case 'eachParticipant':
-  // ...
-  // It determines we need to send to a specific participant
-  publishPromise = this._processSelectiveParticipantDisplay(
-    template,
-    templateRenderContext,
-    null,
-    participantId, // e.g., 'participant-123'
-    displayTimeout // e.g., 10000
-  );
-  // ...
-
-// ... inside _sendPrivateDisplay
-_sendPrivateDisplay(participantMachine, participantId, template, templateRenderContext, timeoutFn) {
-  // ... it compiles the pug template into HTML ...
-  const privateHtml = template(privateRenderContext);
-
-  const renderMessage = { content: privateHtml };
-  if (timeout !== null) {
-    renderMessage.timeout = timeout; // Attaches the 10000ms timeout
-  }
-
-  // CRITICAL: It sends an event to the specific participant's machine, NOT to Ably.
-  participantMachine.send('RENDER_DISPLAY', renderMessage);
-}
-```
----
-
-### Part 4: The Target & Delivery (`AnearParticipantMachine.js`)
-
-**Context:** Each participant in an event has their own instance of the `AnearParticipantMachine` (APM). This machine manages their connection, timeouts, and, most importantly, their private Ably channel.
-
-#### Lifecycle Step 5: Receiving the Private Display Command
-
-The target participant's APM receives the `RENDER_DISPLAY` event from the `DisplayEventProcessor`.
-
-*   **File:** `/Users/machvee/dev/anear-js-api/lib/state_machines/AnearParticipantMachine.js`
-*   **Description:** The APM transitions to its own `renderDisplay` state, where it invokes its `publishPrivateDisplay` service. The payload it received (`renderMessage`) contains the final HTML and the 10-second timeout.
-*   **Code Reference (lines 96-98 and 147-160):**
-
-```javascript
-// ... inside AnearParticipantMachine.js
-idle: {
-  on: {
-    RENDER_DISPLAY: {
-      target: '#renderDisplay'
-    },
-// ...
-renderDisplay: {
-  id: 'renderDisplay',
-  invoke: {
-    src: 'publishPrivateDisplay', // This is the final step
-    onDone: [
-      // After publishing, it starts waiting for the user's ACTION
-      { cond: 'hasActionTimeout', actions: 'updateActionTimeout', target: 'waitParticipantResponse' },
-      { target: 'idle', internal: true }
-    ],
-// ...
-```
-
-#### Lifecycle Step 6: Sending the Ably Message
-
-This is the final hop. The `publishPrivateDisplay` service does one thing: it publishes the HTML to the participant's private channel.
-
-*   **File:** `/Users/machvee/dev/anear-js-api/lib/state_machines/AnearParticipantMachine.js`
-*   **Description:** It uses the `RealtimeMessaging` utility to send the message over Ably. The participant's browser, which is subscribed to this unique channel, receives the message and updates the DOM.
-*   **Code Reference (lines 348-358):**
-
-```javascript
-// ... inside AnearParticipantMachine.js
-services: {
-  publishPrivateDisplay: async (context, event) => {
-    // event.content is the final HTML from the DisplayEventProcessor
-    const displayMessage = { content: event.content };
-
-    await RealtimeMessaging.publish(
-      context.privateChannel, // The participant's unique channel
-      'PRIVATE_DISPLAY',
-      displayMessage
-    );
-
-    // It returns the timeout so the onDone transition knows to start the timer
-    return { timeout: event.timeout };
-  },
-// ...
-```
+*   **Description:** For an `eachParticipant`
